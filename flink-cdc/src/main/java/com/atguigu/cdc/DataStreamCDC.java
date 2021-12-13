@@ -31,8 +31,10 @@ public class DataStreamCDC {
 
         //Step-1.2 开启checkpoint并指定状态后端为fs
 
+        //attention 新的状态后端定义法
         //env.setStateBackend(new HashMapStateBackend());
         //env.getCheckpointConfig().setCheckpointStorage("hdfs://hadoop102:8020/gmall-flink");
+        //attention 旧的状态后端定义法
         env.setStateBackend(new FsStateBackend("hdfs://hadoop102:8020/gmall-flink"));
 
         //2.Flink-CDC将读取binlog的位置信息以状态的方式保存在CK,如果想要做到断点续传,需要从Checkpoint或者Savepoint启动程序

@@ -1,4 +1,4 @@
-package com.atguigu.cdc;
+package com.atguigu.gmall.realtime.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.ververica.cdc.debezium.DebeziumDeserializationSchema;
@@ -8,8 +8,6 @@ import org.apache.flink.util.Collector;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.source.SourceRecord;
-
-import java.util.Optional;
 
 /**
  * @ClassName gmall-flink-CustomerDesrialization

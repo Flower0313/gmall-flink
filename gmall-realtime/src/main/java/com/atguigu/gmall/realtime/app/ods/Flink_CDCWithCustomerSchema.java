@@ -1,19 +1,22 @@
-package com.atguigu.cdc;
+package com.atguigu.gmall.realtime.app.ods;
 
 import com.alibaba.ververica.cdc.connectors.mysql.MySQLSource;
+import com.alibaba.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.alibaba.ververica.cdc.debezium.DebeziumSourceFunction;
+import com.atguigu.gmall.realtime.utils.CustomerDesrialization;
+import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-import static com.atguigu.common.CommonEnv.*;
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
 
 /**
- * @ClassName gmall-flink-DiySqlCDC
+ * @ClassName gmall-flink-Flink_CDCWithCustomerSchema
  * @Author Holden_—__——___———____————_____Xiao
- * @Create 2021年12月13日11:23 - 周一
- * @Describe 自定义flink cdc格式
+ * @Create 2021年12月13日18:08 - 周一
+ * @Describe
  */
-public class DiySqlCDC {
+public class Flink_CDCWithCustomerSchema {
     public static void main(String[] args) throws Exception {
         //Step-1 准备环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -26,15 +29,16 @@ public class DiySqlCDC {
                 .username("root")
                 .password(MYSQL_PASSWORD)
                 .databaseList(DATABASE)
-                .tableList(TABLE)
                 .deserializer(new CustomerDesrialization())
+                .startupOptions(StartupOptions.latest())//只消费新数据,不打印历史数据
                 .build();
 
         //Step-3 连接source数据源
         DataStreamSource<String> mysqlDS = env.addSource(mysql);
 
-        //Step-4 打印
+        //Step-4 将数据写入到kafka
         mysqlDS.print();
+        mysqlDS.addSink(MyKafkaUtil.getKafkaSink(ODS_LOG_TOPIC));
         env.execute();
     }
 }
