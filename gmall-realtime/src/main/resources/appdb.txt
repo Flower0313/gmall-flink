@@ -5,3 +5,8 @@
 
 
 {"operate_type":"insert","sink_type":"hbase","sink_table":"student","source_table":"","sink_extend":"engine=InnoDB default charset=utf8","sink_pk":"id","sink_columns":"id,name,age"}
+
+
+{"database":"gmall_flink","before":{},"after":{"tm_name":"xiaohua","logo_url":"xixi","id":15},"type":"insert","table":"base_trademark"}
+{"database":"gmall_flink","before":{"tm_name":"xiaohua","logo_url":"xixi","id":12},"after":{},"type":"delete","table":"base_trademark"}
+{"database":"gmall_flink","before":{"tm_name":"xiaohua","logo_url":"xixi","id":13},"after":{},"type":"delete","table":"base_trademark"}

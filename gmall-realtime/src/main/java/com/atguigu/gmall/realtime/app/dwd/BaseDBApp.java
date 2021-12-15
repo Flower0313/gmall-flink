@@ -10,11 +10,16 @@ import com.atguigu.gmall.realtime.bean.TableProcess;
 import com.atguigu.gmall.realtime.common.CommonEnv;
 import com.atguigu.gmall.realtime.utils.CustomerDesrialization;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
+import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.streaming.api.datastream.*;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+import org.apache.flink.streaming.connectors.kafka.KafkaSerializationSchema;
 import org.apache.flink.util.OutputTag;
+import org.apache.kafka.clients.producer.ProducerRecord;
+
+import javax.annotation.Nullable;
 
 import static com.atguigu.gmall.realtime.common.CommonEnv.*;
 import static com.atguigu.gmall.realtime.common.CommonEnv.REAL_DATABASE;
@@ -24,7 +29,7 @@ import static com.atguigu.gmall.realtime.common.CommonEnv.REAL_DATABASE;
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月14日8:43 - 周二
  * @Describe 1.当你改了mysql的监控数据库, 需要重启数据库
- * @Test 数据测试流程,1）打开ods的cdc监控gmall_flink,cdc会将变化的数据写入到ods_base_db中,打开
+ * @Test 数据测试流程, 1）打开ods的cdc监控gmall_flink,cdc会将变化的数据写入到ods_base_db中,打开dbapp读取gmall_realtime
  */
 public class BaseDBApp {
     public static void main(String[] args) throws Exception {
@@ -74,11 +79,25 @@ public class BaseDBApp {
         DataStream<JSONObject> hbaseJsonDS = kafkaJsonDS.getSideOutput(hbaseTag);
 
         //Step-8 将kafka数据写入kafka主题,将hbase数据写入Phoenix表
-        //hbase就写入phoenix表
+        //Attention hbase就写入phoenix表
         hbaseJsonDS.addSink(new DimSink());
+
+        //Attention kafka写入主题
+        kafkaJsonDS.addSink(MyKafkaUtil.getKafkaSinkBySchema(new KafkaSerializationSchema<JSONObject>() {
+            @Override
+            public ProducerRecord<byte[], byte[]> serialize(JSONObject jsonObject, @Nullable Long aLong) {
+                //生产者策略:按分区轮询
+                return new ProducerRecord<byte[], byte[]>(
+                        jsonObject.getString("sink_table"), //流向的kafka主题
+                        jsonObject.getString("after").getBytes());//将数据变成字节数组
+                //丢入kafka的数据格式{"name":"我是肖华","id":18}
+            }
+        }));
+
         kafkaJsonDS.print("kafka>>>>>>>>");
         hbaseJsonDS.print("hbase>>>>>>>>");
 
+        filterDS.print("filter");
         tableProcessDS.print();
         //Step-9 启动任务
         env.execute();

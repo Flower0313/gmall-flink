@@ -8,7 +8,9 @@ import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
@@ -30,6 +32,7 @@ public class DimSink extends RichSinkFunction<JSONObject> {
         Properties properties = new Properties();
         properties.put("phoenix.schema.isNamespaceMappingEnabled", "true");
         conn = DriverManager.getConnection(PHOENIX_SERVER, properties);
+        conn.setAutoCommit(true);//mysql默认是true,而phoenix默认为false
     }
 
     /**
@@ -47,10 +50,17 @@ public class DimSink extends RichSinkFunction<JSONObject> {
         //Attention 注意这里的表是hbase中的表名
         String sink_table = value.getString("sink_table");
         //拼接新增sql语句
-        ps = conn.prepareStatement(String.valueOf(genUpsertSql(sink_table, strings, values)));
-        int i = ps.executeUpdate();
-        conn.commit();
-        System.out.println(i == 1 ? "upsert成功" : "upsert失败");
+
+        try {
+            ps = conn.prepareStatement(String.valueOf(genUpsertSql(sink_table, strings, values)));
+            int i = ps.executeUpdate();
+            conn.commit();
+            System.out.println(i == 1 ? "upsert成功" : "upsert失败");
+        } finally {
+            //若ps不为null就关闭
+            Objects.requireNonNull(ps).close();
+        }
+
     }
 
     /**
@@ -62,6 +72,11 @@ public class DimSink extends RichSinkFunction<JSONObject> {
      * @return
      */
     private String genUpsertSql(String table, Set<String> strings, Collection<Object> values) {
+        /*
+        * Explain
+        *  StringUtils.join(Object[] array)的作用
+        * 在每个元素中间加上指定分隔符
+        * */
         StringBuilder upsertSql = new StringBuilder("upsert into ")
                 .append(HBASE_SCHEMA)
                 .append(".").append("\"").append(table).append("\"").append("(")
@@ -70,7 +85,8 @@ public class DimSink extends RichSinkFunction<JSONObject> {
                 .append("values('")
                 .append(StringUtils.join(values, "','"))
                 .append("')");
-        System.out.println(String.valueOf(upsertSql));
+
+        System.out.println("建表语句:" + String.valueOf(upsertSql));
         return String.valueOf(upsertSql);
     }
 }

@@ -40,6 +40,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
 
     @Override//连接phoenix
     public void open(Configuration parameters) throws Exception {
+        System.out.println("正在连接hbase");
         Class.forName(PHOENIX_DRIVER);
         Properties properties = new Properties();
         properties.put("phoenix.schema.isNamespaceMappingEnabled", "true");
@@ -53,6 +54,8 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
      */
     @Override
     public void processElement(JSONObject value, BroadcastProcessFunction<JSONObject, String, JSONObject>.ReadOnlyContext ctx, Collector<JSONObject> out) throws Exception {
+        System.out.println("进入主流流");
+
         //Step-1 获取状态数据
         //获取广播过来的数据
         ReadOnlyBroadcastState<String, TableProcess> state = ctx.getBroadcastState(stateDescriptor);
@@ -61,13 +64,14 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
         String key = table + ":" + type;
         //取出数据，广播流将数据存储在state中
         /*
-        * Explain
-        * Q1:为什么要用table+type作为主键呢?
-        * A1:比如广播流中以A表+insert存入广播状态时,主流中的A表只有insert操作才能关联上,也就是只会
-        *    读取A表中的insert数据,而update数据时不会关联上的。若你需要update的数据话,需要在表配置表中
-        *    新增A表+update数据,这样广播流中就会得到了然后读入hbase
-        *
-        * */
+         * Explain
+         * Q1:为什么要用table+type作为主键呢?
+         * A1:比如广播流中以A表+insert存入广播状态时,主流中的A表只有insert操作才能关联上,也就是只会
+         *    读取A表中的insert数据,而update数据时不会关联上的。若你需要update的数据话,需要在表配置表中
+         *    新增A表+update数据,这样广播流中就会得到了然后读入hbase
+         *
+         * */
+
         TableProcess tableProcess = state.get(key);
 
         /*
@@ -108,7 +112,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
      */
     @Override
     public void processBroadcastElement(String value, BroadcastProcessFunction<JSONObject, String, JSONObject>.Context ctx, Collector<JSONObject> out) throws Exception {
-
+        System.out.println("进入广播流");
         //Step-1 获取并解析数据
         JSONObject jsonObject = JSONObject.parseObject(value);
         //拿到after的数据
@@ -124,11 +128,11 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
 
         //Step-2 在phoenix中建表
         /*
-        * Q&A!!
-        * Q1:若主流和广播流数据同时来,但广播流连接hbase建表很慢,在建表过程中,主流已经来了很多改动的数据,但此时广播流表都没建好,
-        * 更别说将变动的数据广播出去了,那这样主流中就取不到对应的值,那主流中那些来了的数据会丢失,怎么处理?
-        * A1:我的想法是,在建库时这个表的数据就需要先插入好,等全部插入好后再插入数据
-        * */
+         * Q&A!!
+         * Q1:若主流和广播流数据同时来,但广播流连接hbase建表很慢,在建表过程中,主流已经来了很多改动的数据,但此时广播流表都没建好,
+         * 更别说将变动的数据广播出去了,那这样主流中就取不到对应的值,那主流中那些来了的数据会丢失,怎么处理?
+         * A1:我的想法是,在建库时这个表的数据就需要先插入好,等全部插入好后再插入数据
+         * */
         if (TableProcess.SINK_TYPE_HBASE.equals(tableProcess.getSinkType()) && !"delete".equals(operator_type)) {
             checkTable(tableProcess.getSinkTable(),
                     tableProcess.getSinkColumns(),
