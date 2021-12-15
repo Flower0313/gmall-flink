@@ -24,6 +24,12 @@ import org.apache.flink.util.OutputTag;
  * <p>
  * sink:将处理过的数据分别输入到kafka的dwd_page_log主题、dwd_start_log主题、dwd_page_log主题
  */
+
+/*
+ * 数据流:web/app -> Nginx -> SpringBoot -> Kafka(ods) -> FlinkApp -> Kafka(dwd)
+ * 程 序: mockLog -> Nginx -> logger.sh -> Kafka -> BaseLogApp -> Kafka
+ *
+ * */
 public class BaseLogApp {
     public static void main(String[] args) throws Exception {
         //Step-1 准备环境
@@ -59,6 +65,7 @@ public class BaseLogApp {
         //Step-4 数据处理逻辑
         //4.1 按照mid分组
         KeyedStream<JSONObject, String> keyedStream = jsonObjDS.keyBy(data -> data.getJSONObject("common").getString("mid"));
+
 
         //4.2 使用状态做新老用户校验
         DataStream<JSONObject> jsonWithNewFlagDS = keyedStream.map(new RichMapFunction<JSONObject, JSONObject>() {
@@ -137,7 +144,7 @@ public class BaseLogApp {
         System.out.println("正在输入到kafka..");
         pageDS.addSink(MyKafkaUtil.getKafkaSink("dwd_page_log"));
         startDs.addSink(MyKafkaUtil.getKafkaSink("dwd_start_log"));
-        displayDS.addSink(MyKafkaUtil.getKafkaSink("dwd_page_log"));
+        displayDS.addSink(MyKafkaUtil.getKafkaSink("dwd_display_log"));
 
 
         //Step-6 执行flink任务

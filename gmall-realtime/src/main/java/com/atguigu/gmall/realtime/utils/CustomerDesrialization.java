@@ -39,16 +39,17 @@ public class CustomerDesrialization implements DebeziumDeserializationSchema<Str
         String tableName = arr[2];
 
 
-        //Step-4 获取before数据
-        Struct value = (Struct) sourceRecord.value();
-        Struct before = value.getStruct("before");
+        //Step-3 获取before数据
+        Struct value1 = (Struct) sourceRecord.value();
+        Struct before = value1.getStruct("before");
         JSONObject beforeJson = new JSONObject();
-        if (before != null) {//防止空指针异常
+        if (before != null) {
             for (Field field : before.schema().fields()) {
                 //将数据以 "字段:值" 的方式加入json
-                beforeJson.put(field.name(), before.get(field));
+                beforeJson.put(field.name(), before.get(field.name()));
             }
         }
+
 
         //Step-5 获取after数据
         Struct value2 = (Struct) sourceRecord.value();
@@ -57,9 +58,10 @@ public class CustomerDesrialization implements DebeziumDeserializationSchema<Str
         if (after != null) {
             for (Field field : after.schema().fields()) {
                 //将数据以 "字段:值" 的方式加入json
-                afterJson.put(field.name(), after.get(field));
+                afterJson.put(field.name(), after.get(field.name()));
             }
         }
+
 
         //Step-6 获取操作类型
         Envelope.Operation operation = Envelope.operationFor(sourceRecord);
@@ -73,8 +75,8 @@ public class CustomerDesrialization implements DebeziumDeserializationSchema<Str
         result.put("database", db);
         result.put("table", tableName);
         result.put("type", type);
-        result.put("before", beforeJson.toString());
-        result.put("after", afterJson.toString());
+        result.put("before", beforeJson);
+        result.put("after", afterJson);
 
 
         //Step- 输出

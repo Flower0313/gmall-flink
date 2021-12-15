@@ -15,12 +15,17 @@ public class CommonEnv {
 
     //数据库名称
     public static final String DATABASE = "gmall_flink";
+    public static final String REAL_DATABASE = "gmall_realtime";
+
 
     //需要监控的表
     public static final String TABLE = "gmall_flink.base_trademark";
 
     //ods层行为数据
     public static final String ODS_DB_TOPIC = "ods_base_db";
+
+    //
+    public static final String DB_GROUP_ID = "ods_db_group";
 
     //ods层业务数据
     public static final String ODS_LOG_TOPIC = "ods_base_log";

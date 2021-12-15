@@ -1,0 +1,7 @@
+{"database":"gmall_flink","before":{"tm_name":"香奈儿","logo_url":"wdnmd","id":11},"after":{"tm_name":"香奈儿","logo_url":"/static/defailt.jpg","id":11},"type":"update","table":"base_trademark"}
+{"database":"gmall_flink","before":{"tm_name":"臭奈儿","logo_url":"flower","id":11},"after":{"tm_name":"牛逼哄哄","logo_url":"/static/defailt.jpg","id":13},"type":"delete","table":"base_trademark"}
+
+
+
+
+{"operate_type":"insert","sink_type":"hbase","sink_table":"student","source_table":"","sink_extend":"engine=InnoDB default charset=utf8","sink_pk":"id","sink_columns":"id,name,age"}
