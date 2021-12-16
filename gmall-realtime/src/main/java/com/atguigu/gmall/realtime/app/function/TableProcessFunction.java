@@ -207,7 +207,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
     }
 
     /**
-     * 我们只保留变动的字段,其余的字段都删除,因为我们在hbase中创建表就只创建了
+     * 我们只保留需要的字段存入hbase,其余的字段都删除,因为我们在hbase中创建表就只创建了
      * 需要的字段的列,不过滤掉多加字段会出错
      *
      * @param data        全字段

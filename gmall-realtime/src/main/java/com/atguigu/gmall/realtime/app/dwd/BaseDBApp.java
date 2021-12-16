@@ -29,7 +29,9 @@ import static com.atguigu.gmall.realtime.common.CommonEnv.REAL_DATABASE;
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月14日8:43 - 周二
  * @Describe 1.当你改了mysql的监控数据库, 需要重启数据库
- * @Test 数据测试流程, 1）打开ods的cdc监控gmall_flink,cdc会将变化的数据写入到ods_base_db中,打开dbapp读取gmall_realtime
+ * @Test 数据测试流程, 1）打开ods的cdc监控gmall_flink,cdc会将变化的数据写入到ods_base_db中,打开dbapp读取gmall_realtime,
+ * 等hbase中建表成功,在修改gmall_flink中数据
+ *
  */
 public class BaseDBApp {
     public static void main(String[] args) throws Exception {
@@ -82,15 +84,17 @@ public class BaseDBApp {
         //Attention hbase就写入phoenix表
         hbaseJsonDS.addSink(new DimSink());
 
-        //Attention kafka写入主题
+        //Attention kafka写入主题,自定义序列化方式
         kafkaJsonDS.addSink(MyKafkaUtil.getKafkaSinkBySchema(new KafkaSerializationSchema<JSONObject>() {
             @Override
             public ProducerRecord<byte[], byte[]> serialize(JSONObject jsonObject, @Nullable Long aLong) {
-                //生产者策略:按分区轮询
+                /*
+                 * 生产者策略:按分区轮询
+                 * 丢入kafka的数据格式{"name":"我是肖华","id":18}
+                 * */
                 return new ProducerRecord<byte[], byte[]>(
                         jsonObject.getString("sink_table"), //流向的kafka主题
                         jsonObject.getString("after").getBytes());//将数据变成字节数组
-                //丢入kafka的数据格式{"name":"我是肖华","id":18}
             }
         }));
 

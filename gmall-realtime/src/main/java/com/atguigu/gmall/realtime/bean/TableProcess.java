@@ -28,7 +28,7 @@ public class TableProcess {
     String sinkType;
     //输出表或主题
     String sinkTable;
-    //输出字段
+    //输出字段,这些字段会存入hbase中
     String sinkColumns;
     //主键字段
     String sinkPk;

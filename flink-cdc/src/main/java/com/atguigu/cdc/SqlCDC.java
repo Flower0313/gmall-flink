@@ -33,7 +33,7 @@ public class SqlCDC {
         env.setParallelism(1);
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
-
+        //Step-2 在本地创建一个trademarks表去接收base_trademark的数据,字段要对应
         tableEnv.executeSql("CREATE TABLE trademarks (" +
                 "  id STRING," +
                 "  tm_name STRING," +
@@ -48,22 +48,9 @@ public class SqlCDC {
                 "'table-name'='base_trademark'" +
                 ")"
         );
+
+        //Step-3 查询本地表
         tableEnv.executeSql("select * from trademarks").print();
 
-
-        //Step-2 创建mysql-cdc的source
-        /*Properties properties = new Properties();
-
-        MySQLSource.<String>builder()
-                .hostname(HOSTNAME)
-                .port(3306)
-                .username("root")
-                .password(MYSQL_PASSWORD)
-                .databaseList(DATABASE)
-                .tableList(TABLE)
-                .deserializer(new DebeziumDeserializationSchema<String>())
-                .build();*/
-
-        env.execute();
     }
 }
