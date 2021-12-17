@@ -40,7 +40,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
 
     @Override//连接phoenix
     public void open(Configuration parameters) throws Exception {
-        System.out.println("正在连接hbase");
+        System.out.println(">>>正在连接hbase....");
         Class.forName(PHOENIX_DRIVER);
         Properties properties = new Properties();
         properties.put("phoenix.schema.isNamespaceMappingEnabled", "true");
@@ -54,7 +54,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
      */
     @Override
     public void processElement(JSONObject value, BroadcastProcessFunction<JSONObject, String, JSONObject>.ReadOnlyContext ctx, Collector<JSONObject> out) throws Exception {
-        System.out.println("进入主流流");
+        System.out.println(">>>进入主流");
 
         //Step-1 获取状态数据
         //获取广播过来的数据
@@ -83,7 +83,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
         if (tableProcess != null) {
             //Step-2 过滤字段
             JSONObject data = value.getJSONObject("after");
-            //将data的对象地址传过去,所以在filterColumn方法中修改了去除了值,也会影响data
+            //将data的对象地址传过去,所以在filterColumn方法中修改了去除了值,也会影响data(值传递)
             filterColumn(data, tableProcess.getSinkColumns());
 
             //Step-3 分流
@@ -112,7 +112,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
      */
     @Override
     public void processBroadcastElement(String value, BroadcastProcessFunction<JSONObject, String, JSONObject>.Context ctx, Collector<JSONObject> out) throws Exception {
-        System.out.println("进入广播流");
+        System.out.println(">>>正在将table_process表数据导入广播流");
         //Step-1 获取并解析数据
         JSONObject jsonObject = JSONObject.parseObject(value);
         //拿到after的数据
@@ -144,6 +144,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
         //BroadcastState是键值对类型
         BroadcastState<String, TableProcess> state = ctx.getBroadcastState(stateDescriptor);
         //联合主键作为key,tableProcess类作为value
+        System.out.println(">>>将key:" + key + "写入广播流");
         state.put(key, tableProcess);
     }
 
@@ -163,7 +164,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
      */
     private void checkTable(String sinkTable, String sinkColumns, String sinkPk, String sinkExtend) throws SQLException {
         try {
-            System.out.println("正在建表");
+            System.out.println(">>>正在Hbase端建表");
             //Step-1 拼接建表语句的头部信息,(.append)用于向StringBuffer追加字段
             //使用create table if not exist就不需要在这里验证了
             StringBuffer createSql = new StringBuffer("create table if not exists ")
@@ -196,7 +197,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
             int i = ps.executeUpdate();
             conn.commit();
             if (i == 0) {
-                System.out.println("表创建成功！");
+                System.out.println(">>>表创建成功！");
             }
         } catch (Exception e) {
             throw new RuntimeException("Phoenix" + sinkTable + "建表失败");

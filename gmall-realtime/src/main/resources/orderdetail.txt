@@ -1,0 +1,4 @@
+{"sku_num":"1","create_time":"2020-12-21 23:28:49","sku_id":16,"order_price":4488.00,"source_type":"2401","sku_name":"华为 HUAWEI P40 麒麟990 5G SoC芯片 5000万超感知徕卡三摄 30倍数字变焦 8GB+128GB亮黑色全网通5G手机","id":79381,"order_id":26453,"split_total_amount":4488.00}
+{"sku_num":"1","create_time":"2020-12-21 23:28:49","sku_id":27,"order_price":129.00,"source_type":"2401","sku_name":"索芙特i-Softto 口红不掉色唇膏保湿滋润 璀璨金钻哑光唇膏 Z02少女红 活力青春 璀璨金钻哑光唇膏 ","id":79382,"order_id":26454,"split_total_amount":129.00}
+{"sku_num":"1","create_time":"2020-12-21 23:28:49","sku_id":31,"order_price":69.00,"source_type":"2401","sku_name":"CAREMiLLE珂曼奶油小方口红 雾面滋润保湿持久丝缎唇膏 M03赤茶","id":79383,"order_id":26454,"split_total_amount":69.00}
+{"sku_num":"2","create_time":"2020-12-21 23:28:49","sku_id":29,"order_price":69.00,"source_type":"2402","sku_name":"CAREMiLLE珂曼奶油小方口红 雾面滋润保湿持久丝缎唇膏 M01醉蔷薇","id":79384,"source_id":52,"order_id":26454,"split_total_amount":138.00}
