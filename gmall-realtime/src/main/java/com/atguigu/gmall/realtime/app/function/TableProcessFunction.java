@@ -105,8 +105,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
 
     /**
      * 处理广播流数据，将数据流动的情况存入广播,比如x数据从哪里流向到了哪里
-     * 但只是数据在表中变动而没有流动的话是读取不到的
-     * 广播流每进来一条广播数据就执行一次
+     * 但只是数据在表中变动而没有流动的话是读取不到的广播流每进来一条广播数据就执行一次
      *
      * @param value 数据格式{"database":"","before":"","after":"","type":"","table":""}
      */
@@ -123,7 +122,11 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
         //作为联合主键
         String key = table + ":" + type;
 
-        //将json转换成对应的TableProcess类,其字段需要一一对应
+        /*
+         * Attention
+         *  将json转换为对应的TableProcess类;
+         *  这里将json中的operate_type转换为了TableProcess类中的operateType,会自动识别对应
+         * */
         TableProcess tableProcess = JSON.parseObject(afterData.toString(), TableProcess.class);
 
         //Step-2 在phoenix中建表
@@ -204,7 +207,6 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
         } finally {
             ps.close();
         }
-
     }
 
     /**

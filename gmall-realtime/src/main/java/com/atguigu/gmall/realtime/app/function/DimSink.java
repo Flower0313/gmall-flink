@@ -38,15 +38,15 @@ public class DimSink extends RichSinkFunction<JSONObject> {
     /**
      * 将数据通过sql语句写入hbase,phoenix将update和insert语句合并成了upsert
      *
-     * @param value 格式{"database":"","before":"","after":"需要的字段不是全字段","type":"","table":""}
+     * @param value 格式{"database":"","before":"","after":"需要的字段不是全字段","type":"","table":"","sink_table":""}
      */
     @Override
     public void invoke(JSONObject value, Context context) throws Exception {
         PreparedStatement ps = null;
         JSONObject after = value.getJSONObject("after");
 
-        Set<String> strings = after.keySet();
-        Collection<Object> values = after.values();
+        Set<String> strings = after.keySet();//取出after中的key，也就是列名
+        Collection<Object> values = after.values();//取出after的value，也就是列值
         //Attention 注意这里的表是hbase中的表名
         String sink_table = value.getString("sink_table");
         //拼接新增sql语句

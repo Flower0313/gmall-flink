@@ -134,6 +134,22 @@
             <artifactId>flink-cep_${scala.version}</artifactId>
             <version>${flink.version}</version>
         </dependency>
+
+        <!--commons-beanutils是Apache开源组织提供的用于操作JAVA BEAN的工具包,给普通泛型对象赋值
+使用commons-beanutils，我们可以很方便的对bean对象的属性进行操作-->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.9.3</version>
+        </dependency>
+
+        <!--Guava工程包含了若干被Google的Java项目广泛依赖的核心库,方便开发,实现驼峰和下划线命名的转换-->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>29.0-jre</version>
+        </dependency>
+
     </dependencies>
 
     <build>

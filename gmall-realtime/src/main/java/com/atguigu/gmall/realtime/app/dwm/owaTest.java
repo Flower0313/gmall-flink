@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.atguigu.gmall.realtime.bean.OrderDetail;
 import com.atguigu.gmall.realtime.bean.OrderInfo;
 import com.atguigu.gmall.realtime.bean.OrderWide;
-import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
@@ -81,8 +80,22 @@ public class owaTest {
                     }
                 });
 
+        //Step-5 关联维度信息 Hbase Phoenix
+
+
         orderWideWithoutDim.print("orderWideWithoutDim");
 
         env.execute();
+
+        /*
+         * Explain orderWideWithoutDim的数据格式:
+         * OrderWide(detail_id=79384, sku_id=29, order_price=69.00, sku_num=2, sku_name=CAREMiLLE珂曼奶油小方口红 雾面滋润保湿持久丝缎
+         * 唇膏 M01醉蔷薇, split_activity_amount=0.0, split_coupon_amount=0.0, split_total_amount=138.00, province_id=33,
+         * order_status=1001, user_id=26, order_id=26454, total_amount=344.00, activity_reduce_amount=0.00,
+         * coupon_reduce_amount=0.00, original_total_amount=336.00, feight_fee=8.00, create_date=2020-12-21, create_hour=23,
+         * create_time=2020-12-21 23:28:49, split_feight_fee=null, expire_time=null, operate_time=null, province_name=null,
+         * province_area_code=null, province_iso_code=null, province_3166_2_code=null, user_age=null, user_gender=null,
+         * spu_id=null, tm_id=null, category3_id=null, spu_name=null, tm_name=null, category3_name=null)
+         * */
     }
 }

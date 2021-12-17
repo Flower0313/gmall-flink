@@ -81,7 +81,7 @@ public class BaseDBApp {
         DataStream<JSONObject> hbaseJsonDS = kafkaJsonDS.getSideOutput(hbaseTag);
 
         //Step-8 将kafka数据写入kafka主题,将hbase数据写入Phoenix表
-        //Attention hbase就写入phoenix表
+        //Attention hbase就写入phoenix表,其中DimSink()是自定义Sink方法,用于想Hbase中存数据
         hbaseJsonDS.addSink(new DimSink());
 
         //Attention kafka写入主题,自定义序列化方式
