@@ -37,9 +37,9 @@ public class UniqueVisitApp {
 
         //DataStreamSource<String> sourceStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\pageLog.txt");
         //Step-2 接收kafka传来的数据
-        String groupId = "unique_visit_app";
-        String sourceTopic = "dwd_page_log";
-        String sinkTopic = "dwm_unique_visit";
+        String groupId = "unique_visit_app";//消费者主题
+        String sourceTopic = "dwd_page_log";//读取主题
+        String sinkTopic = "dwm_unique_visit";//写入主题
         FlinkKafkaConsumer<String> kafkaSource = MyKafkaUtil.getKafkaSource(sourceTopic, groupId);
         DataStreamSource<String> kafkaDS = env.addSource(kafkaSource);
 
@@ -62,7 +62,7 @@ public class UniqueVisitApp {
         //Step-4 按mid分组
         KeyedStream<JSONObject, String> midStream = process.keyBy(x -> x.getJSONObject("common").getString("mid"));
 
-        //Step-5 过滤(状态编程)
+        //Step-5 过滤 & 去重(状态编程)
         SingleOutputStreamOperator<JSONObject> filterDS = midStream.filter(new RichFilterFunction<JSONObject>() {
             //Attention
             //声明状态,每个key都有自己的firstVisitState状态!!互不影响
@@ -80,7 +80,7 @@ public class UniqueVisitApp {
 
                 //Attention 定义状态有效期
                 StateTtlConfig ttlConfig = StateTtlConfig.newBuilder(Time.days(1))//数据的有效期,定义每天清空一次
-                        .setUpdateType(StateTtlConfig.UpdateType.OnCreateAndWrite)//仅在创建和写入时更新
+                        .setUpdateType(StateTtlConfig.UpdateType.OnCreateAndWrite)//仅在创建和写入时更新,意思是每次状态更新的时候就会重新计算1天的清空倒计时
                         .build();
                 stateDescriptor.enableTimeToLive(ttlConfig);
 

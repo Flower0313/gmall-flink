@@ -10,3 +10,7 @@
 {"database":"gmall_flink","before":{},"after":{"tm_name":"xiaohua","logo_url":"xixi","id":15},"type":"insert","table":"base_trademark"}
 {"database":"gmall_flink","before":{"tm_name":"xiaohua","logo_url":"xixi","id":12},"after":{},"type":"delete","table":"base_trademark"}
 {"database":"gmall_flink","before":{"tm_name":"xiaohua","logo_url":"xixi","id":13},"after":{},"type":"delete","table":"base_trademark"}
+
+
+
+
