@@ -8,7 +8,7 @@ package com.atguigu.gmall.realtime.common;
  */
 public class GmallConfig {
     //Phoenix库名
-    public static final String HBASE_SCHEMA = "\"GMALL0726_REALTIME\"";
+    public static final String HBASE_SCHEMA = "GMALL0726_REALTIME";
 
     //Phoenix驱动
     public static final String PHOENIX_DRIVER = "org.apache.phoenix.jdbc.PhoenixDriver";

@@ -43,18 +43,18 @@ public class OrderWide {
     BigDecimal split_feight_fee;
     String expire_time;
     String operate_time;
-    String province_name;//查询维表得到
-    String province_area_code;
-    String province_iso_code;
-    String province_3166_2_code;
-    Integer user_age;
-    String user_gender;
-    Long spu_id;     //作为维度数据要关联进来
-    Long tm_id;
-    Long category3_id;
-    String spu_name;
-    String tm_name;
-    String category3_name;
+    String province_name;//dim_base_province
+    String province_area_code;//dim_base_province
+    String province_iso_code;//dim_base_province
+    String province_3166_2_code;//dim_base_province
+    Integer user_age;//dim_user_info
+    String user_gender;//dim_user_info
+    Long spu_id;//dim_sku_info
+    String spu_name;//dim_sku_info
+    Long tm_id;//dim_base_trademark
+    String tm_name;//dim_base_trademark
+    Long category3_id;//dim_base_category3
+    String category3_name;//dim_base_category3
 
     public OrderWide(OrderInfo orderInfo, OrderDetail orderDetail) {
         mergeOrderInfo(orderInfo);

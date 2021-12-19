@@ -32,4 +32,6 @@ public class CommonEnv {
 
     //
     public static final String LOG_GROUP_ID = "ods_dwd_base_log_app";
+
+    public static final String REDIS_PASSWORD = "w654646";
 }

@@ -1,6 +1,7 @@
 package com.atguigu.gmall.realtime.app.function;
 
 import com.alibaba.fastjson.JSONObject;
+import com.atguigu.gmall.realtime.utils.DimUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
@@ -37,30 +38,38 @@ public class DimSink extends RichSinkFunction<JSONObject> {
 
     /**
      * 将数据通过sql语句写入hbase,phoenix将update和insert语句合并成了upsert
+     * 这是幂等性方法,若有相同的key的值会在以前的基础上修改的
      *
      * @param value 格式{"database":"","before":"","after":"需要的字段不是全字段","type":"","table":"","sink_table":""}
      */
     @Override
     public void invoke(JSONObject value, Context context) throws Exception {
+        System.out.println("准备插入数据");
         PreparedStatement ps = null;
         JSONObject after = value.getJSONObject("after");
 
         Set<String> strings = after.keySet();//取出after中的key，也就是列名
         Collection<Object> values = after.values();//取出after的value，也就是列值
-        //Attention 注意这里的表是hbase中的表名
+        //Attention 注意这里的表是hbase中的表名,读取的是小写,但Hbase中存的是大写
         String sink_table = value.getString("sink_table");
         //拼接新增sql语句
 
         try {
             ps = conn.prepareStatement(String.valueOf(genUpsertSql(sink_table, strings, values)));
+
+            //若当前插入hbase中的是更新操作,则删除redis中的缓存,以防hbase中数据和redis中数据不统一
+            if ("update".equals(value.getString("type"))) {
+                //Attention 这里sink_table读读取的是dim_base_province这样的内容
+                DimUtil.delRedisDimInfo(sink_table.toUpperCase(), after.getString("id"));
+            }
+
             int i = ps.executeUpdate();
             conn.commit();
-            System.out.println(i == 1 ? "upsert成功" : "upsert失败");
+            System.out.println(i == 1 ? ">>>upsert成功" : ">>>upsert失败");
         } finally {
             //若ps不为null就关闭
             Objects.requireNonNull(ps).close();
         }
-
     }
 
     /**
@@ -73,13 +82,13 @@ public class DimSink extends RichSinkFunction<JSONObject> {
      */
     private String genUpsertSql(String table, Set<String> strings, Collection<Object> values) {
         /*
-        * Explain
-        *  StringUtils.join(Object[] array)的作用
-        * 在每个元素中间加上指定分隔符
-        * */
+         * Explain
+         *  StringUtils.join(Object[] array)的作用
+         * 在每个元素中间加上指定分隔符
+         * */
         StringBuilder upsertSql = new StringBuilder("upsert into ")
                 .append(HBASE_SCHEMA)
-                .append(".").append("\"").append(table).append("\"").append("(")
+                .append(".").append(table.toUpperCase()).append("(")
                 .append(StringUtils.join(strings, ","))
                 .append(") ")
                 .append("values('")

@@ -96,6 +96,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
                 out.collect(value);
             } else if (TableProcess.SINK_TYPE_HBASE.equals(sinkType)) {
                 //Attention Hbase数据(维度表)
+                System.out.println("维度数据变动:" + value);
                 ctx.output(hbaseTag, value);
             }
         } else {
@@ -173,7 +174,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
             StringBuffer createSql = new StringBuffer("create table if not exists ")
                     .append(HBASE_SCHEMA)//数据库名
                     .append(".")
-                    .append("\"" + sinkTable + "\"")//表名
+                    .append(sinkTable.toUpperCase())//表名
                     .append("(");
 
             //Step-2 拼接建表语句的字段信息
@@ -203,7 +204,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
                 System.out.println(">>>表创建成功！");
             }
         } catch (Exception e) {
-            throw new RuntimeException("Phoenix" + sinkTable + "建表失败");
+            throw new RuntimeException("Phoenix" + sinkTable.toUpperCase() + "建表失败");
         } finally {
             ps.close();
         }
