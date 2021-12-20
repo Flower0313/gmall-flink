@@ -23,7 +23,7 @@ import static com.atguigu.gmall.realtime.common.GmallConfig.*;
  * @Create 2021年12月15日9:57 - 周三
  * @Describe
  */
-public class DimSink extends RichSinkFunction<JSONObject> {
+public class DimSinkHbaseFunction extends RichSinkFunction<JSONObject> {
     private Connection conn;
 
     //获取连接
@@ -84,7 +84,7 @@ public class DimSink extends RichSinkFunction<JSONObject> {
         /*
          * Explain
          *  StringUtils.join(Object[] array)的作用
-         * 在每个元素中间加上指定分隔符
+         *  在每个元素中间加上指定分隔符
          * */
         StringBuilder upsertSql = new StringBuilder("upsert into ")
                 .append(HBASE_SCHEMA)

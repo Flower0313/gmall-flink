@@ -4,13 +4,12 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.ververica.cdc.connectors.mysql.MySQLSource;
 import com.alibaba.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.alibaba.ververica.cdc.debezium.DebeziumSourceFunction;
-import com.atguigu.gmall.realtime.app.function.DimSink;
+import com.atguigu.gmall.realtime.app.function.DimSinkHbaseFunction;
 import com.atguigu.gmall.realtime.app.function.TableProcessFunction;
 import com.atguigu.gmall.realtime.bean.TableProcess;
 import com.atguigu.gmall.realtime.common.CommonEnv;
 import com.atguigu.gmall.realtime.utils.CustomerDesrialization;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
-import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.streaming.api.datastream.*;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -58,7 +57,7 @@ public class BaseDBApp {
                 .password(MYSQL_PASSWORD)
                 .databaseList(REAL_DATABASE).tableList(REAL_DATABASE + ".table_process")
                 .deserializer(new CustomerDesrialization())
-                .startupOptions(StartupOptions.initial())//不开启会导致测试的时候广播流中没有key+type值,导致主流认为hbase中没有那个表
+                .startupOptions(StartupOptions.latest())//不开启会导致测试的时候广播流中没有key+type值,导致主流认为hbase中没有那个表
                 .build();
         DataStreamSource<String> tableProcessDS = env.addSource(sourceFunction);
 
@@ -82,9 +81,9 @@ public class BaseDBApp {
 
         //Step-8 将kafka数据写入kafka主题,将hbase数据写入Phoenix表
         //Attention hbase就写入phoenix表,其中DimSink()是自定义Sink方法,用于想Hbase中存数据
-        hbaseJsonDS.addSink(new DimSink());
+        hbaseJsonDS.addSink(new DimSinkHbaseFunction());
 
-        //Attention kafka写入主题,自定义序列化方式
+        //Attention kafka写入主题,传入了一个自定义序列化方式
         kafkaJsonDS.addSink(MyKafkaUtil.getKafkaSinkBySchema(new KafkaSerializationSchema<JSONObject>() {
             @Override
             public ProducerRecord<byte[], byte[]> serialize(JSONObject jsonObject, @Nullable Long aLong) {
@@ -101,8 +100,6 @@ public class BaseDBApp {
         kafkaJsonDS.print("kafka>>>>>>>>");
         hbaseJsonDS.print("hbase>>>>>>>>");
 
-        filterDS.print("filter");
-        tableProcessDS.print();
         //Step-9 启动任务
         env.execute();
     }

@@ -1,6 +1,5 @@
 package com.atguigu.gmall.realtime.utils;
 
-import com.atguigu.gmall.realtime.common.GmallConfig;
 import com.google.common.base.CaseFormat;
 import org.apache.commons.beanutils.BeanUtils;
 
@@ -29,7 +28,7 @@ public class PhoenixUtil {
             return conn;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("获取连接失败！");
+            throw new RuntimeException("获取Phoenix连接失败！");
         }
     }
 
@@ -63,7 +62,7 @@ public class PhoenixUtil {
                 //创建泛型对象,弱类型,只能调用构造方法,这里我们传的是JSONObject,那么会就相当于调用其构造方法
                 T t = clz.newInstance();
 
-                //这里从1开始,因为jdbc的索引就是从1开始,遍历所有字段
+                //遍历所有字段,因为jdbc的索引就是从1开始
                 for (int i = 1; i < columnCount + 1; i++) {
                     //获取列名
                     String columnName = metaData.getColumnName(i);
@@ -80,6 +79,7 @@ public class PhoenixUtil {
                      * Attention
                      * 给泛型对象赋值,参数一是bean对象,参数二是列名,参数三是列值
                      * 其实这里是在调用JSONObject中的get和set方法,然后给JSONObject对象赋值
+                     * BeanUtils.setProperty(class,属性,属性值)
                      * */
                     BeanUtils.setProperty(t, columnName, object);//不能使用copyProperty
 

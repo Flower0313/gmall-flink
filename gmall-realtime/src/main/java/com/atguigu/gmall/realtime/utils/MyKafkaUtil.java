@@ -26,7 +26,7 @@ public class MyKafkaUtil {
     }
 
     /**
-     * @param topic kafka主题
+     * @param topic kafka主题,消息是以String类型写入kafka
      * @return flink的连接kafka生产者对象
      */
     public static FlinkKafkaProducer<String> getKafkaSink(String topic) {

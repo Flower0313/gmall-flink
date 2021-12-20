@@ -52,7 +52,7 @@ public class UniqueVisitApp {
                     JSONObject jsonObject = JSONObject.parseObject(value);
                     out.collect(jsonObject);
                 } catch (Exception e) {
-                    //过滤脏数据
+                    //过滤脏数据,转换成json失败就是脏数据
                     ctx.output(new OutputTag<String>("dirty") {
                     }, value);
                 }
@@ -95,7 +95,11 @@ public class UniqueVisitApp {
                 if (lastPageId == null || lastPageId.length() <= 0) {
                     String firstDate = firstVisitState.value();
                     String curDate = sdf.format(value.getLong("ts"));
-                    //若时间状态为null则表示此次访问是第一次访问 || 若进来的日期与已存状态日期不相等,则说明是不同天的数据了
+                    /*
+                     * Explain
+                     *  我们这里只对每天的相同用户去重
+                     *  若时间状态为null则表示此次访问是第一次访问 || 若进来的日期与已存状态日期不相等,则说明是不同天的数据了
+                     * */
                     if (firstDate == null || !firstDate.equals(curDate)) {
                         firstVisitState.update(curDate);
                         return true;

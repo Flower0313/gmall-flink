@@ -41,16 +41,16 @@ public class OrderWideApp {
         String orderWideSinkTopic = "dwm_order_wide";
         String groupId = "order_wide_group";
 
-        //Step-2.1 接收订单数据信息OrderInfo
+        //Step-2.1 从kafka中接收订单数据信息OrderInfo
         FlinkKafkaConsumer<String> orderInfoKafkaSource = MyKafkaUtil.getKafkaSource(orderInfoSourceTopic, groupId);
         DataStreamSource<String> orderInfoStream = env.addSource(orderInfoKafkaSource);
 
-        //Step-2.2 接收订单明细数据OrderDetail
+        //Step-2.2 从kafka中接收订单明细数据OrderDetail
         FlinkKafkaConsumer<String> orderDetailKafkaSource = MyKafkaUtil.getKafkaSource(orderDetailSourceTopic, groupId);
         DataStreamSource<String> orderDetailStream = env.addSource(orderDetailKafkaSource);
 
 
-        //Step-3 将String类型的JSON变成JavaBean类
+        //Step-3 将String类型的JSON变成JavaBean类,并以数据中的时间戳作为事件水位线
         //OrderInfo
         DataStream<OrderInfo> orderInfoDS = orderInfoStream.map(x -> {
                     OrderInfo orderInfo = JSON.parseObject(x, OrderInfo.class);
@@ -82,7 +82,7 @@ public class OrderWideApp {
                         }));
 
 
-        //Step-4 双流join,两条流都根据order_id关联
+        //Step-4 双流join,两条流都根据order_id关联,流必须是事件时间
         SingleOutputStreamOperator<OrderWide> orderWideWithoutDim = orderInfoDS.keyBy(OrderInfo::getId)
                 .intervalJoin(orderDetailDS.keyBy(OrderDetail::getOrder_id))
                 /*
@@ -99,16 +99,17 @@ public class OrderWideApp {
                 });
 
 
-        //Step-5.1 关联用户维度(DIM_USER_INFO)信息
+        //Step-5.1 关联用户维度(DIM_USER_INFO)信息,使用异步的方法,可以按异步的MapFunction来理解
         DataStream<OrderWide> orderWideWithUserDS = AsyncDataStream.unorderedWait(
                 orderWideWithoutDim,
                 new DimAsyncFunction<OrderWide, OrderWide>("DIM_USER_INFO") {
                     @Override
                     public String getKey(OrderWide orderWide) {
+                        //Attention 取出user_id
                         return orderWide.getUser_id().toString();
                     }
 
-                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    @Override//将查询到的维度信息关联到OrderWide中类去,join(IN,JSONObject)
                     public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -129,14 +130,112 @@ public class OrderWideApp {
                 TimeUnit.MILLISECONDS,//timeout的时间单位
                 100);
 
+        //Step-5.2 关联地区维度
+        DataStream<OrderWide> orderWideWithProvinceDS = AsyncDataStream.unorderedWait(
+                orderWideWithUserDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_BASE_PROVINCE") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用province_id去hbase中查询
+                        return orderWide.getProvince_id().toString();
+                    }
 
-        orderWideWithUserDS.print(">>>");
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setProvince_name(dimInfo.getString("NAME"));
+                        orderWide.setProvince_area_code(dimInfo.getString("AREA_CODE"));
+                        orderWide.setProvince_iso_code(dimInfo.getString("ISO_CODE"));
+                        orderWide.setProvince_3166_2_code("ISO_3166_2");
+                    }
+                },
+                100,//至少60秒,因为访问phoenix,phoenix也要访问zk,访问zk的超时时间是60秒,所以这里至少大于60
+                TimeUnit.MILLISECONDS,//timeout的时间单位
+                100);
 
+        //Step-5.3 关联SKU维度
+        DataStream<OrderWide> orderWideWithSkuDS = AsyncDataStream.unorderedWait(
+                orderWideWithProvinceDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_SKU_INFO") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用getSku_id去hbase中查询
+                        return orderWide.getSku_id().toString();
+                    }
 
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setSpu_id(Long.valueOf(dimInfo.getString("SPU_ID")));
+                    }
+                },
+                100,
+                TimeUnit.MILLISECONDS,
+                100);
 
+        //Step-5.4 关联SPU维度
+        DataStream<OrderWide> orderWideWithSpuDS = AsyncDataStream.unorderedWait(
+                orderWideWithSkuDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_SPU_INFO") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用getSpu_id去hbase中查询
+                        return orderWide.getSpu_id().toString();
+                    }
 
-        //Step-3 打印
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setSpu_name(dimInfo.getString("SPU_NAME"));
+                        orderWide.setCategory3_id(Long.valueOf(dimInfo.getString("CATEGORY3_ID")));
+                        orderWide.setTm_id(Long.valueOf(dimInfo.getString("TM_ID")));
+                    }
+                },
+                100,
+                TimeUnit.MILLISECONDS,
+                100);
 
+        //Step-5.4 关联品牌维度
+        DataStream<OrderWide> orderWideWithTmDS = AsyncDataStream.unorderedWait(
+                orderWideWithSpuDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_BASE_TRADEMARK") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用getSpu_id去hbase中查询
+                        return orderWide.getTm_id().toString();
+                    }
+
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setTm_name(dimInfo.getString("TM_NAME"));
+                    }
+                },
+                100,
+                TimeUnit.MILLISECONDS,
+                100);
+
+        //Step-5.5 关联品类维度
+        DataStream<OrderWide> orderWideWithCategory3DS = AsyncDataStream.unorderedWait(
+                orderWideWithTmDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_BASE_CATEGORY3") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用getSpu_id去hbase中查询
+                        return orderWide.getCategory3_id().toString();
+                    }
+
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setCategory3_name(dimInfo.getString("NAME"));
+                    }
+                },
+                100,
+                TimeUnit.MILLISECONDS,
+                100);
+
+        orderWideWithCategory3DS.map(JSON::toJSONString)
+                .addSink(MyKafkaUtil.getKafkaSink(orderWideSinkTopic));
+
+        orderWideWithCategory3DS.print(">>>");
+
+        //Step-6 执行
         env.execute();
     }
 }

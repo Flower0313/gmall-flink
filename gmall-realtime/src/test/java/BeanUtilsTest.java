@@ -19,6 +19,7 @@ public class BeanUtilsTest {
         /*
         * Conclusion
         * BeanUtils.setProperty使用的前提就是操作的Bean类必须要有get和set方法
+        * sex每天get、set方法,就失效了
         * */
         Student stu = new Student();
         BeanUtils.setProperty(stu,"name","xiao");

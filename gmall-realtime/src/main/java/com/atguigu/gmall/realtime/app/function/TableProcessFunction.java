@@ -3,6 +3,7 @@ package com.atguigu.gmall.realtime.app.function;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.realtime.bean.TableProcess;
+import com.atguigu.gmall.realtime.utils.MyJdbcUtil;
 import org.apache.flink.api.common.state.BroadcastState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.state.ReadOnlyBroadcastState;
@@ -41,7 +42,6 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
     @Override//连接phoenix
     public void open(Configuration parameters) throws Exception {
         System.out.println(">>>正在连接hbase....");
-        Class.forName(PHOENIX_DRIVER);
         Properties properties = new Properties();
         properties.put("phoenix.schema.isNamespaceMappingEnabled", "true");
         conn = DriverManager.getConnection(PHOENIX_SERVER, properties);
@@ -70,8 +70,8 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
          *    读取A表中的insert数据,而update数据时不会关联上的。若你需要update的数据话,需要在表配置表中
          *    新增A表+update数据,这样广播流中就会得到了然后读入hbase
          *
+         * 这里的state.get(key)取出的就是广播流中存的数据
          * */
-
         TableProcess tableProcess = state.get(key);
 
         /*
@@ -79,8 +79,13 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
          * 因为有可能46张表中有一些无关的数据会变动,但是表配置表中没有数据的流动,所以广播流就没有那些变动表的数据,
          * 仅仅只是46张表中数据的变动而已,所以会导致主流多一些无关的key=table+type,而这些key在广播流中,
          * 所以这时候主流读取不到广播流中的state数据,因为广播流中根本没有相应的数据存进去。
+         *
+         * Q&A
+         * Q1:isRealExists()有什么用呢?
+         * A2:这是为了防止广播流中Hbase建表慢了,导致表还没建好,主流数据就先来了
          * */
-        if (tableProcess != null) {
+        if (tableProcess != null || MyJdbcUtil.isRealExists(table, type)) {
+
             //Step-2 过滤字段
             JSONObject data = value.getJSONObject("after");
             //将data的对象地址传过去,所以在filterColumn方法中修改了去除了值,也会影响data(值传递)
@@ -107,6 +112,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
     /**
      * 处理广播流数据，将数据流动的情况存入广播,比如x数据从哪里流向到了哪里
      * 但只是数据在表中变动而没有流动的话是读取不到的广播流每进来一条广播数据就执行一次
+     * 这里来的数据是table_process中的表配置信息
      *
      * @param value 数据格式{"database":"","before":"","after":"","type":"","table":""}
      */
@@ -136,6 +142,7 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
          * Q1:若主流和广播流数据同时来,但广播流连接hbase建表很慢,在建表过程中,主流已经来了很多改动的数据,但此时广播流表都没建好,
          * 更别说将变动的数据广播出去了,那这样主流中就取不到对应的值,那主流中那些来了的数据会丢失,怎么处理?
          * A1:我的想法是,在建库时这个表的数据就需要先插入好,等全部插入好后再插入数据
+         * A2:新增了MyJdbcUtil.isRealExists(table, type),这个会直接去mysql中查询是否有此表,若表也没有的话就直接不操作
          * */
         if (TableProcess.SINK_TYPE_HBASE.equals(tableProcess.getSinkType()) && !"delete".equals(operator_type)) {
             checkTable(tableProcess.getSinkTable(),

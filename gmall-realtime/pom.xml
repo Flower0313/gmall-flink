@@ -142,6 +142,13 @@
             <artifactId>commons-beanutils</artifactId>
             <version>1.9.3</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.springframework/org.springframework.beans -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>org.springframework.beans</artifactId>
+            <version>3.2.2.RELEASE</version>
+        </dependency>
+
 
         <!--Guava工程包含了若干被Google的Java项目广泛依赖的核心库,方便开发,实现驼峰和下划线命名的转换-->
         <dependency>

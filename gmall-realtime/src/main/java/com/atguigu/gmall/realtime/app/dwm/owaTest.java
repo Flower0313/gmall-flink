@@ -6,6 +6,8 @@ import com.atguigu.gmall.realtime.app.function.DimAsyncFunction;
 import com.atguigu.gmall.realtime.bean.OrderDetail;
 import com.atguigu.gmall.realtime.bean.OrderInfo;
 import com.atguigu.gmall.realtime.bean.OrderWide;
+import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
+import com.atguigu.gmall.realtime.utils.PhoenixUtil;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.streaming.api.datastream.AsyncDataStream;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -23,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * @ClassName gmall-flink-owaTest
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月17日20:13 - 周五
- * @Describe
+ * @Describe 测试也需要用到redis | hbase
  */
 public class owaTest {
     public static void main(String[] args) throws Exception {
@@ -91,6 +93,7 @@ public class owaTest {
                 new DimAsyncFunction<OrderWide, OrderWide>("DIM_USER_INFO") {
                     @Override
                     public String getKey(OrderWide orderWide) {
+                        //Attention 使用user_id去hbase中查询
                         return orderWide.getUser_id().toString();
                     }
 
@@ -111,12 +114,123 @@ public class owaTest {
                         orderWide.setUser_gender(gender);
                     }
                 },
-                1000,//至少60秒,因为访问phoenix,phoenix也要访问zk,访问zk的超时时间是60秒,所以这里至少大于60
+                100,//至少60秒,因为访问phoenix,phoenix也要访问zk,访问zk的超时时间是60秒,所以这里至少大于60
                 TimeUnit.MILLISECONDS,//timeout的时间单位
                 100);
 
+        //Step-5.2 关联地区维度
+        DataStream<OrderWide> orderWideWithProvinceDS = AsyncDataStream.unorderedWait(
+                orderWideWithUserDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_BASE_PROVINCE") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用province_id去hbase中查询
+                        return orderWide.getProvince_id().toString();
+                    }
 
-        orderWideWithUserDS.print(">>>");
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setProvince_name(dimInfo.getString("NAME"));
+                        orderWide.setProvince_area_code(dimInfo.getString("AREA_CODE"));
+                        orderWide.setProvince_iso_code(dimInfo.getString("ISO_CODE"));
+                        orderWide.setProvince_3166_2_code("ISO_3166_2");
+                    }
+                },
+                100,//至少60秒,因为访问phoenix,phoenix也要访问zk,访问zk的超时时间是60秒,所以这里至少大于60
+                TimeUnit.MILLISECONDS,//timeout的时间单位
+                100);
+
+        //Step-5.3 关联SKU维度
+        DataStream<OrderWide> orderWideWithSkuDS = AsyncDataStream.unorderedWait(
+                orderWideWithProvinceDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_SKU_INFO") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用getSku_id去hbase中查询
+                        return orderWide.getSku_id().toString();
+                    }
+
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setSpu_id(Long.valueOf(dimInfo.getString("SPU_ID")));
+                    }
+                },
+                100,
+                TimeUnit.MILLISECONDS,
+                100);
+
+        //Step-5.4 关联SPU维度
+        DataStream<OrderWide> orderWideWithSpuDS = AsyncDataStream.unorderedWait(
+                orderWideWithSkuDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_SPU_INFO") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用getSpu_id去hbase中查询
+                        return orderWide.getSpu_id().toString();
+                    }
+
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setSpu_name(dimInfo.getString("SPU_NAME"));
+                        orderWide.setCategory3_id(Long.valueOf(dimInfo.getString("CATEGORY3_ID")));
+                        orderWide.setTm_id(Long.valueOf(dimInfo.getString("TM_ID")));
+                    }
+                },
+                100,
+                TimeUnit.MILLISECONDS,
+                100);
+
+        //Step-5.4 关联品牌维度
+        DataStream<OrderWide> orderWideWithTmDS = AsyncDataStream.unorderedWait(
+                orderWideWithSpuDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_BASE_TRADEMARK") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用getSpu_id去hbase中查询
+                        return orderWide.getTm_id().toString();
+                    }
+
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setTm_name(dimInfo.getString("TM_NAME"));
+                    }
+                },
+                100,
+                TimeUnit.MILLISECONDS,
+                100);
+
+        //Step-5.5 关联品类维度
+        DataStream<OrderWide> orderWideWithCategory3DS = AsyncDataStream.unorderedWait(
+                orderWideWithTmDS,
+                new DimAsyncFunction<OrderWide, OrderWide>("DIM_BASE_CATEGORY3") {
+                    @Override
+                    public String getKey(OrderWide orderWide) {
+                        //Attention 使用getSpu_id去hbase中查询
+                        return orderWide.getCategory3_id().toString();
+                    }
+
+                    @Override//将查询到的维度信息关联到OrderWide中类去
+                    public void join(OrderWide orderWide, JSONObject dimInfo) throws Exception {
+                        orderWide.setCategory3_name(dimInfo.getString("NAME"));
+                    }
+                },
+                100,
+                TimeUnit.MILLISECONDS,
+                100);
+
+        orderWideWithCategory3DS.map(JSON::toJSONString).print("!!>>");
+
+        /*
+         * Explain 写入kafka中的格式
+         * {"activity_reduce_amount":0.00,"category3_id":477,"category3_name":"唇部","coupon_reduce_amount":0.00,"create_date":"2020-12-21",
+         * "create_hour":"19","create_time":"2020-12-21 19:37:11","detail_id":79386,"feight_fee":17.00,"order_id":26455,"order_price":69.00,
+         * "order_status":"1001","original_total_amount":27729.00,"province_3166_2_code":"ISO_3166_2","province_area_code":"450000",
+         * "province_id":27,"province_iso_code":"CN-45","province_name":"广西","sku_id":29,"sku_name":"CAREMiLLE珂曼奶油小方口红
+         * 雾面滋润保湿持久丝缎唇膏 M01醉蔷薇","sku_num":2,"split_activity_amount":0.0,"split_coupon_amount":0.0,"split_total_amount":138.00,
+         * "spu_id":10,"spu_name":"CAREMiLLE珂曼奶油小方口红 雾面滋润保湿持久丝缎唇膏","tm_id":9,"tm_name":"CAREMiLLE","total_amount":27746.00,
+         * "user_age":51,"user_gender":"M","user_id":15}
+         * */
+
 
         env.execute();
 
@@ -130,6 +244,7 @@ public class owaTest {
          * province_area_code=null, province_iso_code=null, province_3166_2_code=null, user_age=null, user_gender=null,
          * spu_id=null, tm_id=null, category3_id=null, spu_name=null, tm_name=null, category3_name=null)
          *
+         *
          * Explain orderWideWithUserDS的数据格式:
          * OrderWide(detail_id=79388, sku_id=24, order_price=11.00, sku_num=2, sku_name=金沙河面条 原味银丝挂面 龙须面 方便速食拉面
          *  清汤面 900g, split_activity_amount=0.0, split_coupon_amount=0.0, split_total_amount=22.00, province_id=29,
@@ -139,6 +254,55 @@ public class owaTest {
          * province_name=null, province_area_code=null, province_iso_code=null, province_3166_2_code=null, user_age=51,
          *  user_gender=F, spu_id=null, spu_name=null, tm_id=null, tm_name=null, category3_id=null, category3_name=null)
          *
+         *
+         * Explain orderWideWithProvinceDS的数据格式:
+         * OrderWide(detail_id=79382, sku_id=27, order_price=129.00, sku_num=1, sku_name=索芙特i-Softto 口红不掉色唇膏保湿滋润 璀璨金钻哑光唇膏
+         * Z02少女红 活力青春 璀璨金钻哑光唇膏 , split_activity_amount=0.0, split_coupon_amount=0.0, split_total_amount=129.00, province_id=33,
+         * order_status=1001, user_id=26, order_id=26454, total_amount=344.00, activity_reduce_amount=0.00, coupon_reduce_amount=0.00,
+         * original_total_amount=336.00, feight_fee=8.00, create_date=2020-12-21, create_hour=23, create_time=2020-12-21 23:28:49,
+         * split_feight_fee=null, expire_time=null, operate_time=null, province_name=云南, province_area_code=530000,
+         * province_iso_code=CN-53,province_3166_2_code=ISO_3166_2, user_age=31, user_gender=M, spu_id=null, spu_name=null,
+         * tm_id=null, tm_name=null, category3_id=null,category3_name=null)
+         *
+         *
+         * Explain orderWideWithSkuDS的数据格式:
+         * OrderWide(detail_id=79382, sku_id=27, order_price=129.00, sku_num=1, sku_name=索芙特i-Softto 口红不掉色唇膏保湿滋润 璀璨金钻哑光唇膏
+         * Z02少女红 活力青春 璀璨金钻哑光唇膏 , split_activity_amount=0.0, split_coupon_amount=0.0, split_total_amount=129.00, province_id=33,
+         *  order_status=1001, user_id=26, order_id=26454, total_amount=344.00, activity_reduce_amount=0.00, coupon_reduce_amount=0.00,
+         * original_total_amount=336.00, feight_fee=8.00, create_date=2020-12-21, create_hour=23, create_time=2020-12-21 23:28:49,
+         * split_feight_fee=null, expire_time=null, operate_time=null, province_name=云南, province_area_code=530000,
+         * province_iso_code=CN-53, province_3166_2_code=ISO_3166_2, user_age=31, user_gender=M, spu_id=9, spu_name=null,
+         * tm_id=null, tm_name=null, category3_id=null, category3_name=null)
+         *
+         *
+         * Explain orderWideWithSpuDS的数据格式:
+         * OrderWide(detail_id=79382, sku_id=27, order_price=129.00, sku_num=1, sku_name=索芙特i-Softto 口红不掉色唇膏保湿滋润 璀璨金钻哑光唇膏
+         * Z02少女红 活力青春 璀璨金钻哑光唇膏 , split_activity_amount=0.0, split_coupon_amount=0.0, split_total_amount=129.00, province_id=33,
+         *  order_status=1001, user_id=26, order_id=26454, total_amount=344.00, activity_reduce_amount=0.00, coupon_reduce_amount=0.00,
+         * original_total_amount=336.00, feight_fee=8.00, create_date=2020-12-21, create_hour=23, create_time=2020-12-21 23:28:49,
+         * split_feight_fee=null, expire_time=null, operate_time=null, province_name=云南, province_area_code=530000,
+         * province_iso_code=CN-53, province_3166_2_code=ISO_3166_2, user_age=31, user_gender=M, spu_id=9, spu_name=索芙特i-Softto
+         * 口红不掉色唇膏保湿滋润 璀璨金钻哑光唇膏 , tm_id=8, tm_name=null, category3_id=477, category3_name=null)
+         *
+         *
+         * Explain orderWideWithTmDS的数据格式:
+         * OrderWide(detail_id=79382, sku_id=27, order_price=129.00, sku_num=1, sku_name=索芙特i-Softto 口红不掉色唇膏保湿滋润 璀璨金钻哑光唇膏
+         * Z02少女红 活力青春 璀璨金钻哑光唇膏 , split_activity_amount=0.0, split_coupon_amount=0.0, split_total_amount=129.00, province_id=33,
+         *  order_status=1001, user_id=26, order_id=26454, total_amount=344.00, activity_reduce_amount=0.00, coupon_reduce_amount=0.00,
+         * original_total_amount=336.00, feight_fee=8.00, create_date=2020-12-21, create_hour=23, create_time=2020-12-21 23:28:49,
+         * split_feight_fee=null, expire_time=null, operate_time=null, province_name=云南, province_area_code=530000,
+         * province_iso_code=CN-53, province_3166_2_code=ISO_3166_2, user_age=31, user_gender=M, spu_id=9, spu_name=索芙特i-Softto
+         * 口红不掉色唇膏保湿滋润 璀璨金钻哑光唇膏 , tm_id=8, tm_name=索芙特, category3_id=477, category3_name=null)
+         *
+         *
+         * Explain orderWideWithCategory3DS的数据格式:
+         * OrderWide(detail_id=79382, sku_id=27, order_price=129.00, sku_num=1, sku_name=索芙特i-Softto 口红不掉色唇膏保湿滋润 璀璨金钻哑光唇膏
+         * Z02少女红 活力青春 璀璨金钻哑光唇膏 , split_activity_amount=0.0, split_coupon_amount=0.0, split_total_amount=129.00, province_id=33,
+         *  order_status=1001, user_id=26, order_id=26454, total_amount=344.00, activity_reduce_amount=0.00, coupon_reduce_amount=0.00,
+         * original_total_amount=336.00, feight_fee=8.00, create_date=2020-12-21, create_hour=23, create_time=2020-12-21 23:28:49,
+         * split_feight_fee=null, expire_time=null, operate_time=null, province_name=云南, province_area_code=530000,
+         *  province_iso_code=CN-53, province_3166_2_code=ISO_3166_2, user_age=31, user_gender=M, spu_id=9, spu_name=索芙特i-Softto
+         * 口红不掉色唇膏保湿滋润 璀璨金钻哑光唇膏 , tm_id=8, tm_name=索芙特, category3_id=477, category3_name=唇部)
          * */
     }
 }

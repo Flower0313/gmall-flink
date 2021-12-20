@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
-import static com.atguigu.gmall.realtime.common.GmallConfig.PHOENIX_SERVER;
+import static com.atguigu.gmall.realtime.common.GmallConfig.*;
 
 /**
  * @ClassName gmall-flink-MyJdbcUtil
@@ -25,15 +25,12 @@ public class MyJdbcUtil {
     private static Connection init() {
         try {
             //mysql连接
-            Connection conn = DriverManager.getConnection(
-                    "jdbc:mysql://localhost:3306/leetcode?characterEncoding=utf-8&useSSL=false",
-                    "root",
-                    "root");
-
+            Class.forName(MYSQL_DRIVER);
+            conn = DriverManager.getConnection(MYSQL_SERVER, "root", "root");
             return conn;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("获取连接失败！");
+            throw new RuntimeException("获取Mysql连接失败！");
         }
     }
 
@@ -93,6 +90,31 @@ public class MyJdbcUtil {
 
         //返回结果集合
         return resultList;
+    }
+
+    public static void close() throws Exception {
+        try {
+            conn.close();
+        } catch (Exception e) {
+            conn.close();
+            throw new RuntimeException("mysql关闭出错");
+        }
+    }
+
+    public static boolean isRealExists(String source_table, String operate_type) throws Exception {
+        if (conn == null) {
+            conn = init();
+        }
+        PreparedStatement ps = conn.prepareStatement("select * from table_process where source_table='" + source_table + "' and operate_type='" + operate_type + "'");
+        ResultSet resultSet = ps.executeQuery();
+        boolean flag = false;
+        if (resultSet.next()) {
+            flag = true;
+        }
+
+        ps.close();
+        resultSet.close();
+        return flag;
     }
 
     public static void main(String[] args) throws Exception {

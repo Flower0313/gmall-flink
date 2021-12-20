@@ -16,7 +16,7 @@ import static com.atguigu.gmall.realtime.utils.PhoenixUtil.conn;
  * @ClassName gmall-flink-DimUtil
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月18日10:30 - 周六
- * @Describe
+ * @Describe 将jdbc中查询出的数据, 将数据转换为Json格式,与PhoenixUtil搭配使用
  */
 public class DimUtil {
     /**
@@ -70,7 +70,7 @@ public class DimUtil {
         //TODO 从查询Phoenix中维度数据
         List<JSONObject> jsonObjects = PhoenixUtil.queryList(querySql, JSONObject.class, false);
 
-        //Step-3 返回查询结果集中第一条元素
+        //Step-3 返回查询结果集中第一条元素,因为也只会查询出一条语句
         JSONObject dimJsonObj = jsonObjects.get(0);
         //TODO 先将此数据存入redis缓存
         jedis.set(redisKey, dimJsonObj.toString());
