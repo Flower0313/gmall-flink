@@ -17,10 +17,15 @@ public class GmallConfig {
     public static final String PHOENIX_SERVER = "jdbc:phoenix:hadoop102,hadoop103,hadoop104:2181";
 
     //mysql连接参数
-    public static final String MYSQL_SERVER="jdbc:mysql://hadoop102:3306/gmall_realtime?characterEncoding=utf-8&useSSL=false";
+    public static final String MYSQL_SERVER = "jdbc:mysql://hadoop102:3306/gmall_realtime?characterEncoding=utf-8&useSSL=false";
 
-    public static final String MYSQL_DRIVER="com.mysql.jdbc.Driver";
+    public static final String MYSQL_DRIVER = "com.mysql.jdbc.Driver";
 
-    public static final String MYSQL_TABLE="table_process";
+    public static final String MYSQL_TABLE = "table_process";
+
+    public static final String CLICKHOUSE_URL = "jdbc:clickhouse://hadoop102:8123/gmall";
+
+    public static final String CLICKHOUSE_DRIVER = "ru.yandex.clickhouse.ClickHouseDriver";
+
 
 }

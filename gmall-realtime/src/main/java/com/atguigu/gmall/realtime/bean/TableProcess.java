@@ -6,7 +6,7 @@ import lombok.Data;
  * @ClassName gmall-flink-TableProcess
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月14日14:03 - 周二
- * @Describe 表配置类 -- 对应gmall_realtime.table_process
+ * @Describe ODS层表配置类 -- 对应gmall_realtime.table_process
  */
 
 @Data

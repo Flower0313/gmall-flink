@@ -10,7 +10,7 @@ import java.math.BigDecimal;
  * @ClassName gmall-flink-OrderWide
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月17日20:50 - 周五
- * @Describe 订单宽表=订单表+订单明细表+所需的维度表
+ * @Describe DWM层订单宽表=订单表+订单明细表+所需的维度表
  */
 @Data
 @AllArgsConstructor

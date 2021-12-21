@@ -141,10 +141,10 @@ public class BaseLogApp {
         DataStream<String> displayDS = pageDS.getSideOutput(new OutputTag<String>("display") {
         });
 
-        System.out.println("正在输入到kafka..");
         pageDS.addSink(MyKafkaUtil.getKafkaSink("dwd_page_log"));
         startDs.addSink(MyKafkaUtil.getKafkaSink("dwd_start_log"));
         displayDS.addSink(MyKafkaUtil.getKafkaSink("dwd_display_log"));
+        System.out.println("正在输入到kafka..");
 
 
         //Step-6 执行flink任务

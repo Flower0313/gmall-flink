@@ -37,8 +37,8 @@ public class ujdTest {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
 
-        //DataStream<String> sourceStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\uf.txt");
-        DataStreamSource<String> sourceStream = env.socketTextStream("hadoop102", 31313);
+        DataStream<String> sourceStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\pageLog.txt");
+        //DataStreamSource<String> sourceStream = env.socketTextStream("hadoop102", 31313);
 
 
         //Step-2 将String转换为Json,并过滤脏数据
@@ -108,9 +108,9 @@ public class ujdTest {
                     }
                 });
         DataStream<JSONObject> timeOutDS = selectDS.getSideOutput(timeOutTag);
-        timeOutDS.print("超时数据>>");
+        //timeOutDS.print("超时数据>>");
         DataStream<JSONObject> unionDS = selectDS.union(timeOutDS);
-        selectDS.print("正常数据>>");
+        unionDS.print("正常数据>>");
         //unionDS.print();
 
         env.execute();

@@ -8,7 +8,7 @@ import java.math.BigDecimal;
  * @ClassName gmall-flink-PaymentWide
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月20日9:28 - 周一
- * @Describe 支付实体类
+ * @Describe DWM层支付实体类
  */
 
 @Data

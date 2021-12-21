@@ -13,7 +13,7 @@ import java.math.BigDecimal;
  * @ClassName gmall-flink-PaymentWide
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月20日10:54 - 周一
- * @Describe 支付宽表类
+ * @Describe DWM层支付宽表类
  */
 
 

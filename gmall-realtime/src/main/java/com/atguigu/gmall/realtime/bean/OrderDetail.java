@@ -8,7 +8,7 @@ import java.math.BigDecimal;
  * @ClassName gmall-flink-OrderDetail
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月17日19:24 - 周五
- * @Describe 订单明细表
+ * @Describe DWM层订单明细表
  */
 
 @Data
