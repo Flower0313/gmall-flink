@@ -21,47 +21,52 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PaymentWide {
-
-    Long payment_id;
-    String subject;
-    String payment_type;
-    String payment_create_time;
+    //from paymentInfo表
     String callback_time;
-    Long detail_id;
-    Long order_id;
-    Long sku_id;
-    BigDecimal order_price;
-    Long sku_num;
-    String sku_name;
-    Long province_id;
-    String order_status;
+    String payment_type;
     Long user_id;
-    BigDecimal total_amount;
-    BigDecimal activity_reduce_amount;
-    BigDecimal coupon_reduce_amount;
-    BigDecimal original_total_amount;
-    BigDecimal feight_fee;
-    BigDecimal split_feight_fee;
-    BigDecimal split_activity_amount;
-    BigDecimal split_coupon_amount;
-    BigDecimal split_total_amount;
+    String subject; //交易内容
+    Long payment_id;
+    String payment_create_time;
     String order_create_time;
 
-    //from Hbase唯独表
-    String province_name;   //查询维表得到
+    //from 公共字段
+    BigDecimal total_amount;//支付金额
+    Long order_id;
+
+
+    //from OrderWide表
+    Long category3_id;
+    String category3_name;
+    Long spu_id;//作为维度数据 要关联进来
+    Long tm_id;
+    String spu_name;//商品名称
+    String tm_name;//品牌名称
+    Long province_id;
+    String province_name;//查询维表得到
     String province_area_code;
     String province_iso_code;
     String province_3166_2_code;
-
-    Integer user_age;       //用户信息
+    Integer user_age;//用户信息
     String user_gender;
+    Long detail_id;
+    Long sku_id;
+    Long sku_num;
+    String sku_name; //sku名称
+    BigDecimal split_activity_amount;
+    BigDecimal split_coupon_amount;
+    BigDecimal split_total_amount;
+    BigDecimal activity_reduce_amount; //活动折扣金额
+    BigDecimal coupon_reduce_amount; // 优惠劵活动金额
+    BigDecimal original_total_amount; //原价金额
+    String order_status;
+    BigDecimal feight_fee; //运费
+    BigDecimal order_price;//购买价格(下单时sku价格)
 
-    Long spu_id;           //作为维度数据 要关联进来
-    Long tm_id;
-    Long category3_id;
-    String spu_name;
-    String tm_name;
-    String category3_name;
+
+    //from 未知
+    BigDecimal split_feight_fee;
+
 
     public PaymentWide(PaymentInfo paymentInfo, OrderWide orderWide) {
         mergePaymentInfo(paymentInfo);

@@ -57,7 +57,7 @@ public class BaseDBApp {
                 .password(MYSQL_PASSWORD)
                 .databaseList(REAL_DATABASE).tableList(REAL_DATABASE + ".table_process")
                 .deserializer(new CustomerDesrialization())
-                .startupOptions(StartupOptions.latest())//不开启会导致测试的时候广播流中没有key+type值,导致主流认为hbase中没有那个表
+                .startupOptions(StartupOptions.initial())//不开启会导致测试的时候广播流中没有key+type值,导致主流认为hbase中没有那个表
                 .build();
         DataStreamSource<String> tableProcessDS = env.addSource(sourceFunction);
 

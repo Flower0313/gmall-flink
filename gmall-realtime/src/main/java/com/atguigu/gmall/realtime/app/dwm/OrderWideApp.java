@@ -36,10 +36,12 @@ public class OrderWideApp {
 
 
         //2.读取Kafka订单和订单明细主题数据 dwd_order_info  dwd_order_detail
+        String groupId = "order_wide_group";
+        //数据来源
         String orderInfoSourceTopic = "dwd_order_info";
         String orderDetailSourceTopic = "dwd_order_detail";
+        //数据去向
         String orderWideSinkTopic = "dwm_order_wide";
-        String groupId = "order_wide_group";
 
         //Step-2.1 从kafka中接收订单数据信息OrderInfo
         FlinkKafkaConsumer<String> orderInfoKafkaSource = MyKafkaUtil.getKafkaSource(orderInfoSourceTopic, groupId);
@@ -211,7 +213,7 @@ public class OrderWideApp {
                 TimeUnit.MILLISECONDS,
                 100);
 
-        //Step-5.5 关联品类维度
+        //Step-5.5 关联品类3维度
         DataStream<OrderWide> orderWideWithCategory3DS = AsyncDataStream.unorderedWait(
                 orderWideWithTmDS,
                 new DimAsyncFunction<OrderWide, OrderWide>("DIM_BASE_CATEGORY3") {

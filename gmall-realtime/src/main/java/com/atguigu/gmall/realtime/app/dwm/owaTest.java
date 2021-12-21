@@ -218,7 +218,7 @@ public class owaTest {
                 TimeUnit.MILLISECONDS,
                 100);
 
-        orderWideWithCategory3DS.map(JSON::toJSONString).print("!!>>");
+        orderWideWithCategory3DS.map(JSON::toJSONString).print();
 
         /*
          * Explain 写入kafka中的格式

@@ -73,7 +73,6 @@ public class VisitorStatsApp {
         );
 
         //uv流
-
         SingleOutputStreamOperator<VisitorStats> uvDS = uniqueVisitDStream.map(
                 json -> {
                     JSONObject jsonObj = JSON.parseObject(json);
@@ -112,7 +111,7 @@ public class VisitorStatsApp {
                 }
         );
 
-        //进入页面数流,统计每天访问页面的人数,跳转的肯定不算
+        //进入页面数流,统计每天访问页面的人数,跳转的肯定不算,Attention 注意sv_ct字段
         SingleOutputStreamOperator<VisitorStats> sessionVisitDS = pageViewDStream.process(new ProcessFunction<String, VisitorStats>() {
             @Override
             public void processElement(String value, ProcessFunction<String, VisitorStats>.Context ctx, Collector<VisitorStats> out) throws Exception {
