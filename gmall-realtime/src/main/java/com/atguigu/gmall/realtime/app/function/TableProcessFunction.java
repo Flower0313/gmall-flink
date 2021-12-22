@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import static com.atguigu.gmall.realtime.common.GmallConfig.*;
+import static com.atguigu.gmall.realtime.utils.MyJdbcUtil.isRealExists;
 
 /**
  * @ClassName gmall-flink-TableProcessFunction
@@ -82,9 +83,10 @@ public class TableProcessFunction extends BroadcastProcessFunction<JSONObject, S
          *
          * Q&A
          * Q1:isRealExists()有什么用呢?
-         * A2:这是为了防止广播流中Hbase建表慢了,导致表还没建好,主流数据就先来了
+         * A2:这是为了防止广播流中Hbase建表慢了,导致表还没建好,主流数据就先来了,若广播流没有关联上的话,
+         *    就从这个方法中取,去mysql中取
          * */
-        if (tableProcess != null || MyJdbcUtil.isRealExists(table, type)) {
+        if (tableProcess != null || (tableProcess = isRealExists(table, type)) != null) {
 
             //Step-2 过滤字段
             JSONObject data = value.getJSONObject("after");

@@ -1,15 +1,14 @@
 package com.atguigu.gmall.realtime.utils;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.atguigu.gmall.realtime.bean.TableProcess;
 import com.google.common.base.CaseFormat;
 import org.apache.commons.beanutils.BeanUtils;
-import org.codehaus.jackson.map.util.BeanUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 
 import static com.atguigu.gmall.realtime.common.GmallConfig.*;
 
@@ -101,32 +100,36 @@ public class MyJdbcUtil {
         }
     }
 
-    public static boolean isRealExists(String source_table, String operate_type) throws Exception {
+
+    /**
+     * 此方法用于主流数据比广播流数据来的快导致广播流的key还没传递过去,主流误认为没有此表,最终导致数据丢失
+     *
+     * @param source_table 来源表
+     * @param operate_type 操作类型
+     * @return 返回一个TableProcess对象, 但可能是null
+     * @throws Exception
+     */
+    public static TableProcess isRealExists(String source_table, String operate_type) throws Exception {
         if (conn == null) {
             conn = init();
         }
-        PreparedStatement ps = conn.prepareStatement("select * from table_process where source_table='" + source_table + "' and operate_type='" + operate_type + "'");
+        String sql = "select * from gmall_realtime.table_process where source_table='" + source_table + "' and operate_type='" + operate_type + "'";
+        PreparedStatement ps = conn.prepareStatement(sql);
         ResultSet resultSet = ps.executeQuery();
-        boolean flag = false;
+        TableProcess tableProcess = null;
         if (resultSet.next()) {
-            flag = true;
+            List<JSONObject> jsonObjects = queryList(sql, JSONObject.class, false);
+            if (jsonObjects.size() > 0) {
+                tableProcess = JSON.parseObject(jsonObjects.get(0).toJSONString(), TableProcess.class);
+            }
         }
-
-        ps.close();
         resultSet.close();
-        return flag;
+        ps.close();
+        //没有的话直接返回null
+        return tableProcess;
     }
 
     public static void main(String[] args) throws Exception {
-
-        List<JSONObject> jsonObjects = queryList("select * from spending", JSONObject.class, false);
-
-        for (JSONObject jsonObject : jsonObjects) {
-            System.out.println(jsonObject);
-        }
-
-        //关闭连接
-        conn.close();
 
 
     }
