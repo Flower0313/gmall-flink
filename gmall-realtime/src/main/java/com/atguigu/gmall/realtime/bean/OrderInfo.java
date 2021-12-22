@@ -17,7 +17,7 @@ public class OrderInfo {
     Long province_id;
     String order_status;
     Long user_id;
-    BigDecimal total_amount;
+    BigDecimal total_amount;//订单中商品总金额
     BigDecimal activity_reduce_amount;
     BigDecimal coupon_reduce_amount;
     BigDecimal original_total_amount;

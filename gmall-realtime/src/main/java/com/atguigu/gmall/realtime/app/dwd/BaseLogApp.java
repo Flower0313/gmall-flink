@@ -116,9 +116,9 @@ public class BaseLogApp {
                     ctx.output(new OutputTag<String>("start") {
                     }, value.toString());
                 } else {
-                    //将页面数据输出到主流
+                    //否则将页面数据输出到主流
                     out.collect(value.toString());
-                    //Attention 注意这里是JSONArray
+                    //Attention 注意这里是JSONArray,再从页面中取出曝光数据流
                     JSONArray displays = value.getJSONArray("displays");
                     if (displays != null && displays.size() > 0) {
                         //取出一个用户的一系列动作,再拼接上page_id

@@ -1,7 +1,7 @@
 package com.atguigu.cdc;
 
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.ververica.cdc.debezium.DebeziumDeserializationSchema;
+import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import io.debezium.data.Envelope;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.util.Collector;
@@ -15,11 +15,16 @@ import java.util.Optional;
  * @ClassName gmall-flink-CustomerDesrialization
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月13日10:35 - 周一
- * @Describe 自定义解析json序列化器
+ * @Describe 自定义解析json序列化器,若不知道怎么写,可以模仿官方的序列化器
  */
 public class CustomerDesrialization implements DebeziumDeserializationSchema<String> {
+
+    private static final long serialVersionUID = 313131313139898L;
+
+    public CustomerDesrialization() {
+    }
     /*
-     * 时间格式:
+     * 数据格式:
      * "database":"",
      * "tableName":"",
      * "type":"c u d",
@@ -34,7 +39,7 @@ public class CustomerDesrialization implements DebeziumDeserializationSchema<Str
         JSONObject result = new JSONObject();
 
 
-        //Step-2 获取主题信息，包含数据库和表名
+        //Step-2 获取主题信息，包含数据库和表名,SourceRecord是kafka资源
         String topic = sourceRecord.topic();//库名和表名按点分割
         String[] arr = topic.split("\\.");
         String db = arr[1];
@@ -75,12 +80,12 @@ public class CustomerDesrialization implements DebeziumDeserializationSchema<Str
         result.put("database", db);
         result.put("table", tableName);
         result.put("type", type);
-        result.put("before", beforeJson.toString());
-        result.put("after", afterJson.toString());
+        result.put("before", beforeJson);//不要toString(),不然会变成\"这种格式
+        result.put("after", afterJson);
 
 
         //Step- 输出
-        collector.collect(result.toString());
+        collector.collect(result.toJSONString());
 
     }
 

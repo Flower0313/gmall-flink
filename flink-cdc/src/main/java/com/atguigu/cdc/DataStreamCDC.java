@@ -1,10 +1,9 @@
 package com.atguigu.cdc;
 
-import com.alibaba.ververica.cdc.connectors.mysql.MySQLSource;
-import com.alibaba.ververica.cdc.connectors.mysql.SeekBinlogToTimestampFilter;
-import com.alibaba.ververica.cdc.connectors.mysql.table.StartupOptions;
-import com.alibaba.ververica.cdc.debezium.DebeziumSourceFunction;
-import com.alibaba.ververica.cdc.debezium.StringDebeziumDeserializationSchema;
+import com.ververica.cdc.connectors.mysql.MySqlSource;
+import com.ververica.cdc.connectors.mysql.table.StartupOptions;
+import com.ververica.cdc.debezium.DebeziumSourceFunction;
+import com.ververica.cdc.debezium.StringDebeziumDeserializationSchema;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.runtime.state.hashmap.HashMapStateBackend;
@@ -63,7 +62,7 @@ public class DataStreamCDC {
 
 
         //Step-2 通过FlinkCDC构建SourceFunction并读取数据
-        DebeziumSourceFunction<String> source = MySQLSource.<String>builder()
+        DebeziumSourceFunction<String> source = MySqlSource.<String>builder()
                 .hostname(HOSTNAME)
                 .port(3306)
                 .username("root")

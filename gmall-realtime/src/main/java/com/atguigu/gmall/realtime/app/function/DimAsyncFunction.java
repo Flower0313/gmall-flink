@@ -33,13 +33,15 @@ public abstract class DimAsyncFunction<IN, OUT> extends RichAsyncFunction<IN, OU
 
     /**
      * 线程开始执行的方法,自定义多线程的方式实现异步IO,为什么不直接用MapFunction加多线程呢?
-     * 因为如果直接使用MapFunction相当于还是同步,先执行完第一个线程再执行后一个线程
+     * 因为如果直接使用MapFunction相当于还是同步,先执行完第一个线程再执行后一个线程,这就相当于是
+     * 异步的MapFunction
      *
      * @param input        输入数据,这里拿OrderWide举例,每条OrderWide数据都会一条一条传进来
      * @param resultFuture 回调函数,数据库交互的结果会返回给它,结果返还给流
      */
     @Override
     public void asyncInvoke(IN input, ResultFuture<OUT> resultFuture) throws Exception {
+        //这种开启线程的方式不需要start
         threadPoolExecutor.submit(new Runnable() {
             @SneakyThrows//接收异常的注解
             @Override

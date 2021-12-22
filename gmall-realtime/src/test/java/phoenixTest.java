@@ -19,7 +19,7 @@ public class phoenixTest {
         properties.put("phoenix.schema.isNamespaceMappingEnabled", "true");
         Connection conn = DriverManager.getConnection(PHOENIX_SERVER, properties);
 
-        PreparedStatement ps = conn.prepareStatement("select * from GMALL0726_REALTIME.DIM_BASE_TRADEMARK");
+        PreparedStatement ps = conn.prepareStatement("select * from GMALL0726_REALTIME.DIM_SKU_INFO where id='12'");
 
         ResultSet resultSet = ps.executeQuery();
         //Attention getMetaData是获得表结构

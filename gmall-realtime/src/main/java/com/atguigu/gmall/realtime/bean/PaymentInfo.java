@@ -16,7 +16,7 @@ public class PaymentInfo {
     Long id;
     Long order_id; //订单id
     Long user_id;
-    BigDecimal total_amount; //支付金额
+    BigDecimal total_amount; //订单中每个商品的金额
     String subject; //商品描述
     String payment_type; //支付类型
     String create_time;
