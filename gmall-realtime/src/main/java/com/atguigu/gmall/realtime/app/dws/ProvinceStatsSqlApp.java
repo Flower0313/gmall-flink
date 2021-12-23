@@ -7,21 +7,16 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Table;
-import org.apache.flink.table.api.TableResult;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
-import org.apache.flink.types.Row;
-
-import static com.atguigu.gmall.realtime.common.CommonEnv.ORDER_DETAIL_TOPIC;
-import static com.atguigu.gmall.realtime.common.CommonEnv.ORDER_WIDE_TOPIC;
-import static org.apache.flink.table.api.Expressions.$;
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
 
 /**
  * @ClassName gmall-flink-ProvinceStatsSqlApp
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月22日20:26 - 周三
- * @Describe 地区主题表
+ * @Describe 地区主题表(Sql版)
  * 数据来源:dwd_order_wide
- * 数据去向:
+ * 数据去向:clickhouse:province_stats
  */
 public class ProvinceStatsSqlApp {
     public static void main(String[] args) throws Exception {
