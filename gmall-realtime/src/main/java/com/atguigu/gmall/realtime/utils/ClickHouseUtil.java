@@ -36,9 +36,9 @@ public class ClickHouseUtil {
          * */
         return JdbcSink.<T>sink(
                 sql,
-                ((ps, t) -> {
+                ((preparedStatement, inputClass) -> {
                     //1.获取你传入类中的属性(包括private),因为不同的表字段不同,不能写死
-                    Field[] fields = t.getClass().getDeclaredFields();
+                    Field[] fields = inputClass.getClass().getDeclaredFields();
                     //此变量用于控制映射的偏移量
                     int skipOffset = 0;
                     for (int i = 0; i < fields.length; i++) {
@@ -59,7 +59,7 @@ public class ClickHouseUtil {
                         //4.根据字段名向类中取出对应的字段名
                         try {
                             //5.获取字段值
-                            Object value = field.get(t);
+                            Object value = field.get(inputClass);
                             /*
                              * Attention
                              * 6.将查询的值放入,这里要减去skipOffset就是因为要javaBean的属性顺序和表中字段对应上
@@ -67,7 +67,7 @@ public class ClickHouseUtil {
                              *
                              *   或者让注解字段都放在最后,这也是一种办法
                              * */
-                            ps.setObject(i + 1 - skipOffset, value);
+                            preparedStatement.setObject(i + 1 - skipOffset, value);
                         } catch (IllegalAccessException e) {
                             e.printStackTrace();
                         }
