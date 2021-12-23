@@ -17,11 +17,15 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
+
 /**
  * @ClassName gmall-flink-PaymentWideApp
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月20日11:05 - 周一
- * @Describe
+ * @Describe 支付宽表
+ * 数据来源:dwd_payment_info、dwm_order_wide
+ * 数据去向:dwm_payment_wide
  */
 public class PaymentWideApp {
     public static void main(String[] args) throws Exception {
@@ -30,20 +34,15 @@ public class PaymentWideApp {
 
         //Step-1 声明Kafka主题
         String groupId = "payment_wide_group";
-        //数据来源
-        String paymentInfoSourceTopic = "dwd_payment_info";
-        String orderWideSourceTopic = "dwm_order_wide";
-        //数据去向
-        String paymentWideSinkTopic = "dwm_payment_wide";
 
         //Step-2 获取数据流
         //DataStreamSource<String> paymentKafkaDS = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\paymentInfo.txt");
         //DataStreamSource<String> orderWideKafkaDS = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\orderwide.txt");
 
         //支付表,直接从BaseDBApp中采集过来
-        DataStreamSource<String> paymentKafkaDS = env.addSource(MyKafkaUtil.getKafkaSource(paymentInfoSourceTopic, groupId));
+        DataStreamSource<String> paymentKafkaDS = env.addSource(MyKafkaUtil.getKafkaSource(PAYMENT_INFO_TOPIC, groupId));
         //订单宽表,还有进行关联等一系列处理,时间肯定更长
-        DataStreamSource<String> orderWideKafkaDS = env.addSource(MyKafkaUtil.getKafkaSource(orderWideSourceTopic, groupId));
+        DataStreamSource<String> orderWideKafkaDS = env.addSource(MyKafkaUtil.getKafkaSource(ORDER_WIDE_TOPIC, groupId));
 
 
         //Step-3 将数据转为JavaBean并提取时间戳生成waterMark
@@ -106,7 +105,7 @@ public class PaymentWideApp {
         //Step-5 将JavaBean类转为Json格式再发送给kafka类型
         //paymentWideDS.map(JSON::toJSONString).print();
         paymentWideDS.map(JSON::toJSONString)
-                .addSink(MyKafkaUtil.getKafkaSink(paymentWideSinkTopic));
+                .addSink(MyKafkaUtil.getKafkaSink(PAYMENT_WIDE_TOPIC));
 
         env.execute();
     }

@@ -34,4 +34,37 @@ public class CommonEnv {
     public static final String LOG_GROUP_ID = "ods_dwd_base_log_app";
 
     public static final String REDIS_PASSWORD = "w654646";
+
+
+    //页面日志主题
+    public static final String PAGE_LOG_TOPIC = "dwd_page_log";
+    //用户跳出数主题
+    public static final String USER_JUMP_TOPIC = "dwm_user_jump_detail";
+    //启动日志主题
+    public static final String START_LOG_TOPIC = "dwd_start_log";
+    //曝光日志主题
+    public static final String DISPLAY_LOG_TOPIC = "dwd_display_log";
+
+
+    //订单主题
+    public static final String ORDER_INFO_TOPIC = "dwd_order_info";
+    //订单详细主题
+    public static final String ORDER_DETAIL_TOPIC = "dwd_order_detail";
+    //订单宽表主题
+    public static final String ORDER_WIDE_TOPIC = "dwm_order_wide";
+    //支付信息主题
+    public static final String PAYMENT_INFO_TOPIC = "dwd_payment_info";
+    //支付宽表
+    public static final String PAYMENT_WIDE_TOPIC = "dwm_payment_wide";
+    //首日访问主题
+    public static final String UNIQUE_VISIT_TOPIC = "dwm_unique_visit";
+    //购物车主题
+    public static final String CART_INTO_TOPIC = "dwd_cart_info";
+    //收藏主题
+    public static final String FAVOR_INFO_TOPIC = "dwd_favor_info";
+    //退款主题
+    public static final String ORDER_REFUND_TOPIC = "dwd_order_refund_info";
+    //评论主题
+    public static final String COMMENT_INFO_TOPIC = "dwd_comment_info";
+
 }

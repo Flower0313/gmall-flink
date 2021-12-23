@@ -2,7 +2,6 @@ package com.atguigu.gmall.realtime.app.dwm;
 
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
-import net.minidev.json.JSONAware;
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.cep.CEP;
@@ -21,16 +20,18 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
-import org.eclipse.jetty.util.ajax.JSON;
-
 import java.util.List;
 import java.util.Map;
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
 
 /**
  * @ClassName gmall-flink-UserJumpDetailApp
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月16日13:59 - 周四
  * @Describe 跳出明细计算：跳出就是用户成功访问了网站的一个页面后就退出，不在继续访问网站的其它页面。而跳出率就是用跳出次数除以访问次数。
+ *
+ * 数据来源:dwd_page_log
+ * 数据去向:dwm_user_jump_detail
  */
 public class UserJumpDetailApp {
     public static void main(String[] args) throws Exception {
@@ -39,10 +40,9 @@ public class UserJumpDetailApp {
         env.setParallelism(1);
 
         //Step-2  读取Kafka dwd_page_log主题数据创建流
-        String sourceTopic = "dwd_page_log";
         String groupId = "userJumpDetailApp";
-        String sinkTopic = "dwm_user_jump_detail";
-        FlinkKafkaConsumer<String> kafkaSource = MyKafkaUtil.getKafkaSource(sourceTopic, groupId);
+
+        FlinkKafkaConsumer<String> kafkaSource = MyKafkaUtil.getKafkaSource(PAGE_LOG_TOPIC, groupId);
         DataStreamSource<String> sourceDS = env.addSource(kafkaSource);
 
         //DataStream<String> sourceStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\pageLog.txt");
@@ -124,7 +124,7 @@ public class UserJumpDetailApp {
         //result.print("组合条件数据>>>");
         //输入到kafka
         result.print(">>>");
-        result.addSink(MyKafkaUtil.getKafkaSink(sinkTopic));
+        result.addSink(MyKafkaUtil.getKafkaSink(USER_JUMP_TOPIC));
         env.execute();
     }
 }

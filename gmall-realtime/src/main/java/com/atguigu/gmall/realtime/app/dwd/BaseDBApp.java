@@ -30,7 +30,9 @@ import static com.atguigu.gmall.realtime.common.CommonEnv.REAL_DATABASE;
  * @Describe 1.当你改了mysql的监控数据库, 需要重启数据库
  * @Test 数据测试流程, 1）打开ods的cdc监控gmall_flink,cdc会将变化的数据写入到ods_base_db中,打开dbapp读取gmall_realtime,
  * 等hbase中建表成功,在修改gmall_flink中数据
- *
+ * <p>
+ * 数据来源:ods_base_db
+ * 数据去向:hbase表和各种kafka中dwd_xx主题
  */
 public class BaseDBApp {
     public static void main(String[] args) throws Exception {

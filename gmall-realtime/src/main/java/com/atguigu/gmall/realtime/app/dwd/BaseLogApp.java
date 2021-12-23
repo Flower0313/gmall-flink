@@ -15,6 +15,8 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
+
 /**
  * @ClassName gmall-flink-BaseLogApp
  * @Author Holden_—__——___———____————_____Xiao
@@ -23,13 +25,14 @@ import org.apache.flink.util.OutputTag;
  * 它的数据由rt_applog中的gmall2020-mock-log-2020-12-18.jar和gmall-logger.jar配合产生
  * <p>
  * sink:将处理过的数据分别输入到kafka的dwd_page_log主题、dwd_start_log主题、dwd_page_log主题
- */
-
-/*
+ * <p>
  * 数据流:web/app -> Nginx -> SpringBoot -> Kafka(ods) -> FlinkApp -> Kafka(dwd)
  * 程 序: mockLog -> Nginx -> logger.sh -> Kafka -> BaseLogApp -> Kafka
- *
- * */
+ * <p>
+ * 数据来源:ods_base_log
+ * 数据去向:dwd_page_log、dwd_start_log、dwd_display_log
+ */
+
 public class BaseLogApp {
     public static void main(String[] args) throws Exception {
         //Step-1 准备环境
@@ -141,9 +144,9 @@ public class BaseLogApp {
         DataStream<String> displayDS = pageDS.getSideOutput(new OutputTag<String>("display") {
         });
 
-        pageDS.addSink(MyKafkaUtil.getKafkaSink("dwd_page_log"));
-        startDs.addSink(MyKafkaUtil.getKafkaSink("dwd_start_log"));
-        displayDS.addSink(MyKafkaUtil.getKafkaSink("dwd_display_log"));
+        pageDS.addSink(MyKafkaUtil.getKafkaSink(PAGE_LOG_TOPIC));
+        startDs.addSink(MyKafkaUtil.getKafkaSink(START_LOG_TOPIC));
+        displayDS.addSink(MyKafkaUtil.getKafkaSink(DISPLAY_LOG_TOPIC));
         System.out.println("正在输入到kafka..");
 
 

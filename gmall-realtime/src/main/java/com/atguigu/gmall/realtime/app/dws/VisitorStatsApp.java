@@ -217,7 +217,7 @@ public class VisitorStatsApp {
         Four2OneResult.print(">>>");
 
         //Attention 注意这种insert写法必须顺序需要一样
-        Four2OneResult.addSink(ClickHouseUtil.getJdbcSink(
+        Four2OneResult.addSink(ClickHouseUtil.<VisitorStats>getJdbcSink(
                 "insert into visitor_stats values(?,?,?,?,?,?,?,?,?,?,?,?)"
         ));
 

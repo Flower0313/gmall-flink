@@ -74,7 +74,7 @@ public class ClickHouseUtil {
                     }
                 }),
                 new JdbcExecutionOptions.Builder()
-                        .withBatchSize(2)//5条提交一次,所以一直是5的倍数写入
+                        .withBatchSize(1)//1条提交一次,所以一直是1的倍数写入,若这里设置5,但只来了1条数据,是不会写入到clickhouse的
                         .build(),
                 new JdbcConnectionOptions.JdbcConnectionOptionsBuilder()
                         .withDriverName(GmallConfig.CLICKHOUSE_DRIVER)

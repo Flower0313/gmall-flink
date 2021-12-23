@@ -21,11 +21,15 @@ import org.apache.flink.util.Collector;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.TimeUnit;
 
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
+
 /**
  * @ClassName gmall-flink-OrderWideApp
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月17日19:25 - 周五
  * @Describe 读取订单和订单明细数据
+ * 数据来源:dwd_order_info、dwd_order_detail
+ * 数据去向:dwm_order_wide
  */
 public class OrderWideApp {
     public static void main(String[] args) throws Exception {
@@ -37,18 +41,13 @@ public class OrderWideApp {
 
         //2.读取Kafka订单和订单明细主题数据 dwd_order_info  dwd_order_detail
         String groupId = "order_wide_group";
-        //数据来源
-        String orderInfoSourceTopic = "dwd_order_info";
-        String orderDetailSourceTopic = "dwd_order_detail";
-        //数据去向
-        String orderWideSinkTopic = "dwm_order_wide";
 
         //Step-2.1 从kafka中接收订单数据信息OrderInfo
-        FlinkKafkaConsumer<String> orderInfoKafkaSource = MyKafkaUtil.getKafkaSource(orderInfoSourceTopic, groupId);
+        FlinkKafkaConsumer<String> orderInfoKafkaSource = MyKafkaUtil.getKafkaSource(ORDER_INFO_TOPIC, groupId);
         DataStreamSource<String> orderInfoStream = env.addSource(orderInfoKafkaSource);
 
         //Step-2.2 从kafka中接收订单明细数据OrderDetail
-        FlinkKafkaConsumer<String> orderDetailKafkaSource = MyKafkaUtil.getKafkaSource(orderDetailSourceTopic, groupId);
+        FlinkKafkaConsumer<String> orderDetailKafkaSource = MyKafkaUtil.getKafkaSource(ORDER_DETAIL_TOPIC, groupId);
         DataStreamSource<String> orderDetailStream = env.addSource(orderDetailKafkaSource);
 
 
@@ -233,7 +232,7 @@ public class OrderWideApp {
                 100);
 
         orderWideWithCategory3DS.map(JSON::toJSONString)
-                .addSink(MyKafkaUtil.getKafkaSink(orderWideSinkTopic));
+                .addSink(MyKafkaUtil.getKafkaSink(ORDER_WIDE_TOPIC));
 
         orderWideWithCategory3DS.print(">>>");
 

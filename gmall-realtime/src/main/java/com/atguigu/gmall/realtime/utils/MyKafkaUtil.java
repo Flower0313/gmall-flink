@@ -56,4 +56,17 @@ public class MyKafkaUtil {
                 properties,
                 FlinkKafkaProducer.Semantic.EXACTLY_ONCE);
     }
+
+    public static String getKafkaDDL(String topic, String groupId) {
+        String ddl = ") with (" +
+                "'connector'='kafka'," +
+                "'topic'='"+topic+"'," +
+                "'properties.bootstrap.servers'='hadoop102:9092'," +
+                "'properties.group.id'='"+groupId+"'," +
+                "'format'='json'," +
+                "'scan.startup.mode'='latest-offset'," +
+                "'json.ignore-parse-errors'='true')";
+
+        return ddl;
+    }
 }

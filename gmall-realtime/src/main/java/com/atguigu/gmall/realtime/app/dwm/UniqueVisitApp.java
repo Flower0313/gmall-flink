@@ -20,13 +20,17 @@ import org.eclipse.jetty.util.ajax.JSON;
 
 import java.text.SimpleDateFormat;
 
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
+
 /**
  * @ClassName gmall-flink-UniqueVisitAp
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月16日10:08 - 周四
  * @Describe 需求:统计每日每一个用户第一次访问的数据
  * 注意点1:识别出该访客打开的第一个页面,表示这个访客开始进入我们的应用
- * * 2.访客一天内可能多次进入应用,应在一天范围内去重
+ * 2.访客一天内可能多次进入应用,应在一天范围内去重
+ * 数据来源:dwd_page_log
+ * 数据去向:dwm_unique_visit
  */
 public class UniqueVisitApp {
     private static KeyedStream<JSONObject, String> midStream;
@@ -38,9 +42,8 @@ public class UniqueVisitApp {
         //DataStreamSource<String> sourceStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\pageLog.txt");
         //Step-2 接收kafka传来的数据
         String groupId = "unique_visit_app";//消费者主题
-        String sourceTopic = "dwd_page_log";//读取主题
-        String sinkTopic = "dwm_unique_visit";//写入主题
-        FlinkKafkaConsumer<String> kafkaSource = MyKafkaUtil.getKafkaSource(sourceTopic, groupId);
+
+        FlinkKafkaConsumer<String> kafkaSource = MyKafkaUtil.getKafkaSource(PAGE_LOG_TOPIC, groupId);
         DataStreamSource<String> kafkaDS = env.addSource(kafkaSource);
 
 
@@ -114,7 +117,7 @@ public class UniqueVisitApp {
         });
 
         //Step-6 打印出过滤数据
-        filterDS.map(JSON::toString).addSink(MyKafkaUtil.getKafkaSink(sinkTopic));
+        filterDS.map(JSON::toString).addSink(MyKafkaUtil.getKafkaSink(UNIQUE_VISIT_TOPIC));
         filterDS.print("uv>>>>");
         env.execute();
     }

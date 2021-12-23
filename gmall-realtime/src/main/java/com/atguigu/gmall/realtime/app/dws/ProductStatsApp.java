@@ -33,6 +33,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
+
 /**
  * @ClassName gmall-flink-ProductStatsApp
  * @Author Holden_—__——___———____————_____Xiao
@@ -43,6 +45,11 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * 2.JSONArray是用JSONObject构成的数组:
  * [{"id":"123","age":"12","name":"博客园"},{"id":"321","age":"12","name":"csdn"}]
+ * <p>
+ * 3.
+ * 数据来源:dwd_page_log、dwm_order_wide、dwm_payment_wide、dwd_cart_info、dwd_favor_info、
+ *          dwd_order_refund_info、dwd_comment_info
+ * 数据去向:ClickHouse:product_stats
  */
 public class ProductStatsApp {
     public static void main(String[] args) throws Exception {
@@ -51,43 +58,34 @@ public class ProductStatsApp {
 
         //消费者组
         String groupId = "product_stats_app";
-        //数据来源
-        String pageViewSourceTopic = "dwd_page_log";
-        String orderWideSourceTopic = "dwm_order_wide";
-        String paymentWideSourceTopic = "dwm_payment_wide";
-        String cartInfoSourceTopic = "dwd_cart_info";
-        String favorInfoSourceTopic = "dwd_favor_info";
-        String refundInfoSourceTopic = "dwd_order_refund_info";
-        String commentInfoSourceTopic = "dwd_comment_info";
-
 
         //页面日志
         //DataStreamSource<String> pageViewDS = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\pageLog.txt");
-        DataStreamSource<String> pageViewDS = env.addSource(MyKafkaUtil.getKafkaSource(pageViewSourceTopic, groupId));
+        DataStreamSource<String> pageViewDS = env.addSource(MyKafkaUtil.getKafkaSource(PAGE_LOG_TOPIC, groupId));
 
         //收藏订单数据
         //DataStreamSource<String> favorInfoDS = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\favorinfo.txt");
-        DataStreamSource<String> favorInfoDS = env.addSource(MyKafkaUtil.getKafkaSource(favorInfoSourceTopic, groupId));
+        DataStreamSource<String> favorInfoDS = env.addSource(MyKafkaUtil.getKafkaSource(FAVOR_INFO_TOPIC, groupId));
 
         //下单流
         //DataStreamSource<String> orderWideDS = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\orderwide.txt");
-        DataStreamSource<String> orderWideDS = env.addSource(MyKafkaUtil.getKafkaSource(orderWideSourceTopic, groupId));
+        DataStreamSource<String> orderWideDS = env.addSource(MyKafkaUtil.getKafkaSource(ORDER_WIDE_TOPIC, groupId));
 
         //支付宽流
         //DataStreamSource<String> paymentWideDS = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\paymentwide.txt");
-        DataStreamSource<String> paymentWideDS = env.addSource(MyKafkaUtil.getKafkaSource(paymentWideSourceTopic, groupId));
+        DataStreamSource<String> paymentWideDS = env.addSource(MyKafkaUtil.getKafkaSource(PAYMENT_WIDE_TOPIC, groupId));
 
         //购物车流
         //DataStreamSource<String> cartInfoDS = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\cartinfo.txt");
-        DataStreamSource<String> cartInfoDS = env.addSource(MyKafkaUtil.getKafkaSource(cartInfoSourceTopic, groupId));
+        DataStreamSource<String> cartInfoDS = env.addSource(MyKafkaUtil.getKafkaSource(CART_INTO_TOPIC, groupId));
 
         //退款流
         //DataStreamSource<String> refundInfoDS = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\refundinfo.txt");
-        DataStreamSource<String> refundInfoDS = env.addSource(MyKafkaUtil.getKafkaSource(refundInfoSourceTopic, groupId));
+        DataStreamSource<String> refundInfoDS = env.addSource(MyKafkaUtil.getKafkaSource(ORDER_REFUND_TOPIC, groupId));
 
         //评论流
         //DataStreamSource<String> commentInfoDS = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\commentinfo.txt");
-        DataStreamSource<String> commentInfoDS = env.addSource(MyKafkaUtil.getKafkaSource(commentInfoSourceTopic, groupId));
+        DataStreamSource<String> commentInfoDS = env.addSource(MyKafkaUtil.getKafkaSource(COMMENT_INFO_TOPIC, groupId));
 
         //Step-2.1 转换曝光及页面流数据,取出sku商品曝光的次数
         SingleOutputStreamOperator<ProductStats> pageAndDisplayStatsDS = pageViewDS.process(
