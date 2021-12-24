@@ -56,7 +56,7 @@ public class KeywordStatsApp {
                 "page MAP<STRING,STRING>," +
                 "ts BIGINT," +
                 "rt as to_timestamp(from_unixtime(ts/1000,'yyyy-MM-dd HH:mm:ss'))," +
-                "watermark for rt as rt - interval '1' second" +
+                "watermark for rt as rt - interval '2' second" +
                 MyKafkaUtil.getKafkaDDL(PAGE_LOG_TOPIC, groupId));
 
         //TODO 4.数据过滤,where后面是过滤条件,为上一跳页面为"search"和搜索词 is not null
