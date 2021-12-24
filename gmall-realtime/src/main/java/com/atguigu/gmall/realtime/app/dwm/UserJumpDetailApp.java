@@ -20,8 +20,10 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
+
 import java.util.List;
 import java.util.Map;
+
 import static com.atguigu.gmall.realtime.common.CommonEnv.*;
 
 /**
@@ -29,7 +31,7 @@ import static com.atguigu.gmall.realtime.common.CommonEnv.*;
  * @Author Holden_—__——___———____————_____Xiao
  * @Create 2021年12月16日13:59 - 周四
  * @Describe 跳出明细计算：跳出就是用户成功访问了网站的一个页面后就退出，不在继续访问网站的其它页面。而跳出率就是用跳出次数除以访问次数。
- *
+ * <p>
  * 数据来源:dwd_page_log
  * 数据去向:dwm_user_jump_detail
  */
@@ -62,7 +64,7 @@ public class UserJumpDetailApp {
                         }
                     }
                 })//抽取ts字段当成事件时间的时间戳
-                .assignTimestampsAndWatermarks(WatermarkStrategy.  <JSONObject>forMonotonousTimestamps()
+                .assignTimestampsAndWatermarks(WatermarkStrategy.<JSONObject>forMonotonousTimestamps()
                         .withTimestampAssigner(new SerializableTimestampAssigner<JSONObject>() {
                             @Override
                             public long extractTimestamp(JSONObject element, long recordTimestamp) {

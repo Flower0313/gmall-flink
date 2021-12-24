@@ -1,6 +1,5 @@
 package com.atguigu.gmallpublishertest.mapper;
 
-import com.atguigu.gmall.realtime.bean.ProductStats;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 

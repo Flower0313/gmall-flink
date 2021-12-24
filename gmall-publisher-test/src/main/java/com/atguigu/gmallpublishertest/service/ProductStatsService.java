@@ -1,6 +1,7 @@
 package com.atguigu.gmallpublishertest.service;
 
 import com.atguigu.gmallpublishertest.bean.ProductStats;
+import com.atguigu.gmallpublishertest.bean.ProvinceStats;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -27,6 +28,4 @@ public interface ProductStatsService {
 
     //统计某天不同SPU商品交易额排名
     public List<ProductStats> getProductStatsGroupBySpu(int date, int limit);
-
-
 }

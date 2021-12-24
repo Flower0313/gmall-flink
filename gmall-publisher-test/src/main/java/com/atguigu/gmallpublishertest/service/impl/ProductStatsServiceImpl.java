@@ -1,6 +1,7 @@
 package com.atguigu.gmallpublishertest.service.impl;
 
 import com.atguigu.gmallpublishertest.bean.ProductStats;
+import com.atguigu.gmallpublishertest.bean.ProvinceStats;
 import com.atguigu.gmallpublishertest.mapper.ProductStatsMapper;
 import com.atguigu.gmallpublishertest.service.ProductStatsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +59,7 @@ public class ProductStatsServiceImpl implements ProductStatsService {
      */
     @Override
     public List<ProductStats> getProductStatsByTrademark(int date, int limit) {
+        //一个Map转换为一个ProductStat
         List<Map> stats = productStatsMapper.getProductStatsByTrademark(date, limit);
 
         ArrayList<ProductStats> productStats = new ArrayList<>();
@@ -88,6 +90,4 @@ public class ProductStatsServiceImpl implements ProductStatsService {
         }
         return productStats;
     }
-
-
 }

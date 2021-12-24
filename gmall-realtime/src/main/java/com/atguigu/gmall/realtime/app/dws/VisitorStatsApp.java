@@ -118,6 +118,7 @@ public class VisitorStatsApp {
                 JSONObject jsonObj = JSON.parseObject(value);
                 String lastPageId = jsonObj.getJSONObject("page").getString("last_page_id");
                 JSONObject common = jsonObj.getJSONObject("common");
+                //上一页为空就代表这是刚进入这个网页
                 if (lastPageId == null || lastPageId.length() == 0) {
                     new VisitorStats("", "",
                             common.getString("vc"),

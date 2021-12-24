@@ -27,7 +27,7 @@ public class VisitorStats {
     private String is_new;
     //度量值：独立访客数
     private Long uv_ct = 0L;
-    //度量值：页面访问数
+    //度量值：页面浏览数
     private Long pv_ct = 0L;
     //度量值： 进入次数
     private Long sv_ct = 0L;

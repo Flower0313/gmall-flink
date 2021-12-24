@@ -2,8 +2,8 @@ package com.atguigu.gmallpublishertest.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.atguigu.gmallpublishertest.bean.ProductStats;
-import com.atguigu.gmallpublishertest.mapper.ProductStatsMapper;
 import com.atguigu.gmallpublishertest.service.ProductStatsService;
+import com.atguigu.gmallpublishertest.util.GmallTime;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -26,7 +25,6 @@ public class ProductStatsController {
     @Autowired//它会找到它的实现类,也就是ProductStatsServiceImpl
     ProductStatsService productStatsService;
 
-
     /**
      * 请求api格式:localhost:8070/api/sugar/gmv?date=日期
      * 返回的json数据格式,status={1:今天,0:昨天}
@@ -39,13 +37,13 @@ public class ProductStatsController {
      * @return 统计数据
      * @defaultValue 是给date参数默认值
      */
-    @RequestMapping("/api/sugar/gmv")
+    @RequestMapping("/gmv")
     public String getGMV(@RequestParam(value = "date", defaultValue = "0") Integer date) {
         int status = 0;
         if (date == 0) {
             status = 1;
             //若请求中没有赋值导致date为默认值,就以当前日期为参数
-            date = getNowDate();
+            date = GmallTime.getNowDate();
         }
 
         HashMap<String, Object> result = new HashMap<>();
@@ -88,7 +86,7 @@ public class ProductStatsController {
     ) {
 
         if (date == 0) {
-            date = getNowDate();
+            date = GmallTime.getNowDate();
         }
         //取出从接口来的数据,将数据遍历循环添加到ArrayList中
         List<ProductStats> stats = productStatsService.getProductStatsGroupByCategory3(date, limit);
@@ -104,17 +102,11 @@ public class ProductStatsController {
                 "  \"data\": {" +
                 "    \"categories\": [\"" +
                 StringUtils.join(category_names, "\",\"")
-                + "\"]," +
-                "    \"series\": [" +
-                "      {" +
-                "        \"name\": \"品牌\"," +
+                + "\"],\"series\": [" +
+                "      {" + "\"name\": \"品牌\"," +
                 "        \"data\": [" +
                 StringUtils.join(order_amounts, ",") +
-                "        ]" +
-                "      }" +
-                "    ]" +
-                "  }" +
-                "}";
+                "]}]}}";
     }
 
     /*
@@ -132,7 +124,7 @@ public class ProductStatsController {
             @RequestParam(value = "date", defaultValue = "0") Integer date,
             @RequestParam(value = "limit", defaultValue = "5") int limit) {
         if (date == 0) {
-            date = getNowDate();
+            date = GmallTime.getNowDate();
         }
         //取出从接口来的数据,将数据遍历循环添加到ArrayList中
         List<ProductStats> stats = productStatsService.getProductStatsByTrademark(date, limit);
@@ -155,11 +147,7 @@ public class ProductStatsController {
                 "        \"name\": \"品牌\"," +
                 "        \"data\": [" +
                 StringUtils.join(order_amounts, ",") +
-                "        ]" +
-                "      }" +
-                "    ]" +
-                "  }" +
-                "}";
+                "        ]}]}}";
     }
 
 
@@ -168,7 +156,7 @@ public class ProductStatsController {
             @RequestParam(value = "date", defaultValue = "0") Integer date,
             @RequestParam(value = "limit", defaultValue = "10") int limit) {
         if (date == 0) {
-            date = getNowDate();
+            date = GmallTime.getNowDate();
         }
         //取出从接口来的数据,将数据遍历循环添加到ArrayList中
         List<ProductStats> stats = productStatsService.getProductStatsGroupBySpu(date, limit);
@@ -208,20 +196,10 @@ public class ProductStatsController {
                 "      }" +
                 "    ]," +
                 "    \"rows\":");
-        json.append(StringUtils.join(middleJson)).append(
-                "}" +
-                        "}");
+        json.append(StringUtils.join(middleJson)).append("}}");
 
         return json.toString();
 
-    }
-
-
-    /**
-     * @return 获取当前时间
-     */
-    public Integer getNowDate() {
-        return Integer.valueOf(DateFormatUtils.format(new Date(), "yyyyMMdd"));
     }
 
 }
