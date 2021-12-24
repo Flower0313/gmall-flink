@@ -4,6 +4,7 @@ import com.atguigu.gmallpublishertest.bean.VisitorStats;
 import com.atguigu.gmallpublishertest.mapper.VisitorStatsMapper;
 import com.atguigu.gmallpublishertest.service.VisitorStatService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,8 @@ import java.util.Map;
  * @Create 2021年12月24日20:54 - 周五
  * @Describe
  */
+
+@Service
 public class VisitorStatServiceImpl implements VisitorStatService {
     @Autowired
     VisitorStatsMapper visitorStatsMapper;

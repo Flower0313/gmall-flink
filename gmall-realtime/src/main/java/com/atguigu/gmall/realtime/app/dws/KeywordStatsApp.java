@@ -89,6 +89,7 @@ public class KeywordStatsApp {
         //TODO 8.将表转换为流,注意select中的字段顺序和JavaBean的字段顺序可以不一样,
         DataStream<KeywordStats> keywordStatsDataStream = tableEnv.toAppendStream(keywordStatsSearch, KeywordStats.class);
 
+        keywordStatsDataStream.print();
         //TODO 7.写入到clickHouse,这里的顺序要按照JavaBean中表顺序来写,之前没有写是因为JavaBean中顺序和ClickHouse字段顺序一样
         keywordStatsDataStream.addSink(
                 ClickHouseUtil.<KeywordStats>getJdbcSink(

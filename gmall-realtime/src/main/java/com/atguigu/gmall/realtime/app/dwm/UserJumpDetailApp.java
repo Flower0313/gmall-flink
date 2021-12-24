@@ -86,14 +86,15 @@ public class UserJumpDetailApp {
                 })
                 .times(2)//选出两次访问主页的动作
                 .consecutive()//分组内严格连续,加上后等同于.where().next().where()的写法
-                .within(Time.seconds(10));//选出两个连续访问页面10秒之内的,没有满足此模式的数据都进入到了超时侧输出流
+                .within(Time.seconds(5));//选出两个连续访问页面10秒之内的,没有满足此模式的数据都进入到了超时侧输出流
         /*
          * Q&A
          * Q1:这里为什么需要加within(10)呢?10是自己的需求
          * A1:因为若直接不加时间，那么这就是严格连续的时间，都没有容忍的时间，其实超时数据和正常数据都是求的跳出的数据;
-         * 输出条件1：若一条null数据到了，但下一条数据超过了10秒，它10秒后输出，它算一次跳出数据，因为你10秒后再做操作就相当于跳出了
-         * 输出条件2：若一条null数据来了，在10秒内又来了一条null数据，它立即输出，也算跳出数据，因为相当于第一条啥都没干就跳走了
-         * 所以加了within只是输出的条件不一样，结果还是一样的，不同的是输出的数据时间点，满足任意输出条件即可。
+         * 输出条件1：若一条null数据到了,但下一条数据超过了10秒,它10秒后输出,它算一次跳出数据,因为你10秒后再做操作就相当于跳
+         *          出了(超时时间按需求而定)
+         * 输出条件2：若一条null数据来了,在10秒内又来了一条null数据,它立即输出,也算跳出数据,因为相当于第一条啥都没干就跳走了
+         *          所以加了within只是输出的条件不一样，结果还是一样的，不同的是输出的数据时间点，满足任意输出条件即可。
          * */
 
         //将模式作用在流上
@@ -122,10 +123,11 @@ public class UserJumpDetailApp {
         DataStream<String> userJumpDetailDS = selectDS.getSideOutput(timeOutTag);
         //userJumpDetailDS.print("条件1跳出数据>>>");
 
+        //Attention 将满足跳出条件1的数据和满足跳出条件2的数据union起来再输出
         DataStream<String> result = selectDS.union(userJumpDetailDS);
         //result.print("组合条件数据>>>");
         //输入到kafka
-        result.print(">>>");
+        result.print("uj>>>");
         result.addSink(MyKafkaUtil.getKafkaSink(USER_JUMP_TOPIC));
         env.execute();
     }

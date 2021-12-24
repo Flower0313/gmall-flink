@@ -100,7 +100,7 @@ public class UniqueVisitApp {
                     String curDate = sdf.format(value.getLong("ts"));
                     /*
                      * Explain
-                     *  我们这里只对每天的相同用户去重
+                     *  我们这里只对每天的相同用户去重,不同天的用户当然可以重复,只按天来算
                      *  若时间状态为null则表示此次访问是第一次访问 || 若进来的日期与已存状态日期不相等,则说明是不同天的数据了
                      * */
                     if (firstDate == null || !firstDate.equals(curDate)) {

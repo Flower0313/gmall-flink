@@ -23,6 +23,8 @@ import org.apache.flink.util.Collector;
 import java.time.Duration;
 import java.util.Date;
 
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
+
 /**
  * @ClassName gmall-flink-VisitorStatsApp
  * @Author Holden_—__——___———____————_____Xiao
@@ -30,33 +32,35 @@ import java.util.Date;
  * @Describe 访客主题宽表计算
  * 对渠道、新老用户、app版本、省市区域这4个指标来聚合
  * 聚合窗口10秒
+ * <p>
+ * 数据来源:dwd_page_log、dwd_unique_visit、dwm_user_jump_detail
+ * 数据去向:ClickHouse:visitor_stats
  */
 public class VisitorStatsApp {
     public static void main(String[] args) throws Exception {
 
         //Step-1 声明环境 & 准备变量
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(4);
+        //设置多并行度时会出错,应该是在等水位线
+        env.setParallelism(1);
 
         //消费者组
         String groupId = "visitor_stats_app";
-        //消费主题
-        String pageViewSourceTopic = "dwd_page_log";
-        String uniqueVisitSourceTopic = "dwm_unique_visit";
-        String userJumpDetailSourceTopic = "dwm_user_jump_detail";
+
 
         //Step-2 从Kafka主题中接收消息
-        FlinkKafkaConsumer<String> pageView = MyKafkaUtil.getKafkaSource(pageViewSourceTopic, groupId);
-        FlinkKafkaConsumer<String> uniqueVisit = MyKafkaUtil.getKafkaSource(uniqueVisitSourceTopic, groupId);
-        FlinkKafkaConsumer<String> userJump = MyKafkaUtil.getKafkaSource(userJumpDetailSourceTopic, groupId);
+        DataStreamSource<String> pageViewDStream = env
+                .addSource(MyKafkaUtil.getKafkaSource(PAGE_LOG_TOPIC, groupId));
+        DataStreamSource<String> uniqueVisitDStream = env
+                .addSource(MyKafkaUtil.getKafkaSource(UNIQUE_VISIT_TOPIC, groupId));
+        DataStreamSource<String> userJumpDStream = env
+                .addSource(MyKafkaUtil.getKafkaSource(USER_JUMP_TOPIC, groupId));
 
-
-        DataStreamSource<String> pageViewDStream = env.addSource(pageView);
-        DataStreamSource<String> uniqueVisitDStream = env.addSource(uniqueVisit);
-        DataStreamSource<String> userJumpDStream = env.addSource(userJump);
-
-        //Step-3 将三条流转换为统一的VisitorStats格式再进行union
-        //pv流
+        /*
+         * Step-3 将三条流转换为统一的VisitorStats格式再进行union
+         * 在三条流进行union的时候,需要先统一格式,所以先转换为VisitorStats的宽类
+         * pv流,只要是一个页面访问记录就加1
+         * */
         SingleOutputStreamOperator<VisitorStats> pvDS = pageViewDStream.map(
                 json -> {
                     JSONObject jsonObj = JSON.parseObject(json);
@@ -90,9 +94,9 @@ public class VisitorStatsApp {
         //uj流
         /*
          * Explain 这里要注意!
-         * 因为uj数据是经过了处理的,我们当时使用了within(10),也就是当数据同时过来时,一份pageLog数据直接进入到这里执行,但另一份
+         * 因为uj数据是经过处理再来的,我们当时使用了within(10),也就是当数据同时过来时,一份pageLog数据直接进入到这里执行,但另一份
          * pageLog数据需要经过uj的处理才来union,但是uj那里需要10秒后才能返回数据,也就是这里的时间戳已经过去了10秒,窗口已经关闭,
-         * 而uj那里还没有返回数据过来进行关联
+         * 而uj那里还没有返回数据过来进行关联,所以我们要将延迟时间设置的比它处理的时间长
          *
          *
          * 具体解释:https://www.bilibili.com/video/BV1Ju411o7f8?p=120&t=637.5
@@ -111,7 +115,7 @@ public class VisitorStatsApp {
                 }
         );
 
-        //进入页面数流,统计每天访问页面的人数,跳转的肯定不算,Attention 注意sv_ct字段
+        //进入页面数流,统计每天访问页面的人数,页面内跳转的肯定不算,Attention 注意sv_ct字段
         SingleOutputStreamOperator<VisitorStats> sessionVisitDS = pageViewDStream.process(new ProcessFunction<String, VisitorStats>() {
             @Override
             public void processElement(String value, ProcessFunction<String, VisitorStats>.Context ctx, Collector<VisitorStats> out) throws Exception {
@@ -131,17 +135,17 @@ public class VisitorStatsApp {
             }
         });
 
-        //Step-4 将四条流关联起来,这里关联,只是将4个小水管共同接着一根大水管,谁先来谁先进
+        //Step-4 将四条流关联起来,这里关联,只是将4个小水管共同接着一根大水管,FIFO,先进先出
         //这四条流内部有序,但是外部是乱序的,也就是pvDS可能在ujDS前打印出也可能在后,但内部是有序的
         DataStream<VisitorStats> unionDetailDS = uvDS.union(
                 pvDS,
                 sessionVisitDS,
                 ujDS);
 
-        //Step-5 给大水管中的数据打上时间戳水位线,这里取的是事件时间,延迟为11秒,因为要等待uj(处理时间11秒)的数据过来
+        //Step-5 给大水管中的数据打上时间戳水位线,这里取的是事件时间,延迟为13秒,因为要等待uj(处理时间11秒)的数据过来
         SingleOutputStreamOperator<VisitorStats> visitorStatsWithWatermarkDS =
                 unionDetailDS.assignTimestampsAndWatermarks(WatermarkStrategy
-                        .<VisitorStats>forBoundedOutOfOrderness(Duration.ofSeconds(11))
+                        .<VisitorStats>forBoundedOutOfOrderness(Duration.ofSeconds(13))
                         .withTimestampAssigner(((element, ts) -> element.getTs())));
 
         //Step-6 分组,将大水管中分流
@@ -218,9 +222,9 @@ public class VisitorStatsApp {
         Four2OneResult.print(">>>");
 
         //Attention 注意这种insert写法必须顺序需要一样
-        Four2OneResult.addSink(ClickHouseUtil.<VisitorStats>getJdbcSink(
+        /*Four2OneResult.addSink(ClickHouseUtil.<VisitorStats>getJdbcSink(
                 "insert into visitor_stats values(?,?,?,?,?,?,?,?,?,?,?,?)"
-        ));
+        ));*/
 
         env.execute();
     }

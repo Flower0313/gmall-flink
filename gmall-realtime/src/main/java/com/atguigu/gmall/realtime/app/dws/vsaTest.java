@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.realtime.bean.VisitorStats;
 import com.atguigu.gmall.realtime.utils.ClickHouseUtil;
 import com.atguigu.gmall.realtime.utils.DateTimeUtil;
+import com.atguigu.gmall.realtime.utils.MyKafkaUtil;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.functions.KeySelector;
@@ -23,6 +24,8 @@ import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 
+import static com.atguigu.gmall.realtime.common.CommonEnv.*;
+
 /**
  * @ClassName gmall-flink-vsaTest
  * @Author Holden_—__——___———____————_____Xiao
@@ -32,18 +35,23 @@ import java.time.Duration;
 public class vsaTest {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(4);
+        env.setParallelism(1);
 
-        String gourpId = "visitor_stats_app";
+        String groupId = "visitor_stats_app";
         String pageViewSourceTopic = "dwd_page_log";
         String uniqueVisitSourceTopic = "dwm_unique_visit";
         String userJumpDetailSourceTopic = "dwm_user_jump_detail";
 
 
-        DataStreamSource<String> pageViewDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\pageLog.txt");
+        /*DataStreamSource<String> pageViewDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\pageLog.txt");
         DataStreamSource<String> uniqueVisitDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\uniquevisit.txt");
-        DataStreamSource<String> userJumpDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\userjump.txt");
-
+        DataStreamSource<String> userJumpDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\userjump.txt");*/
+        DataStreamSource<String> pageViewDStream = env
+                .addSource(MyKafkaUtil.getKafkaSource(PAGE_LOG_TOPIC, groupId));
+        DataStreamSource<String> uniqueVisitDStream = env
+                .addSource(MyKafkaUtil.getKafkaSource(UNIQUE_VISIT_TOPIC, groupId));
+        DataStreamSource<String> userJumpDStream = env
+                .addSource(MyKafkaUtil.getKafkaSource(USER_JUMP_TOPIC, groupId));
 
         //Step-3 将三条流转换为统一的VisitorStats格式再进行union
         //pv流
@@ -209,11 +217,10 @@ public class vsaTest {
          * */
 
         Four2OneResult.print(">>>");
-
-        //Attention 注意这种insert写法必须顺序需要一样
-        Four2OneResult.addSink(ClickHouseUtil.getJdbcSink(
+        /*Four2OneResult.addSink(ClickHouseUtil.<VisitorStats>getJdbcSink(
                 "insert into visitor_stats values(?,?,?,?,?,?,?,?,?,?,?,?)"
-        ));
+        ));*/
+
 
         env.execute();
     }
