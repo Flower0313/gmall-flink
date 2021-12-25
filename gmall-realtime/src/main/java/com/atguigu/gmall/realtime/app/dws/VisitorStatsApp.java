@@ -49,16 +49,12 @@ public class VisitorStatsApp {
 
 
         //Step-2 从Kafka主题中接收消息
-        /*DataStreamSource<String> pageViewDStream = env
+        DataStreamSource<String> pageViewDStream = env
                 .addSource(MyKafkaUtil.getKafkaSource(PAGE_LOG_TOPIC, groupId));
         DataStreamSource<String> uniqueVisitDStream = env
                 .addSource(MyKafkaUtil.getKafkaSource(UNIQUE_VISIT_TOPIC, groupId));
         DataStreamSource<String> userJumpDStream = env
-                .addSource(MyKafkaUtil.getKafkaSource(USER_JUMP_TOPIC, groupId));*/
-
-        DataStreamSource<String> pageViewDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\pageLog.txt");
-        DataStreamSource<String> uniqueVisitDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\uniquevisit.txt");
-        DataStreamSource<String> userJumpDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\userjump.txt");
+                .addSource(MyKafkaUtil.getKafkaSource(USER_JUMP_TOPIC, groupId));
 
         /*
          * Step-3 将三条流转换为统一的VisitorStats格式再进行union
@@ -233,9 +229,9 @@ public class VisitorStatsApp {
         Four2OneResult.print(">>>");
 
         //Attention 注意这种insert写法必须顺序需要一样
-        /*Four2OneResult.addSink(ClickHouseUtil.<VisitorStats>getJdbcSink(
+        Four2OneResult.addSink(ClickHouseUtil.<VisitorStats>getJdbcSink(
                 "insert into visitor_stats values(?,?,?,?,?,?,?,?,?,?,?,?)"
-        ));*/
+        ));
 
         env.execute();
     }

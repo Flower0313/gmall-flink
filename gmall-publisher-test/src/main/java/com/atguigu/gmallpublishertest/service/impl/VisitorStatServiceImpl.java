@@ -48,4 +48,23 @@ public class VisitorStatServiceImpl implements VisitorStatService {
         }
         return statsHashMap;
     }
+
+    @Override
+    public List<VisitorStats> getMidStatsGroupByHour(int date) {
+        List<Map> stats = visitorStatsMapper.selectVisitorStatsByHour(date);
+
+        ArrayList<VisitorStats> visitorStats = new ArrayList<>();
+
+        for (Map stat : stats) {
+            VisitorStats build = VisitorStats.builder()
+                    .hr(Integer.parseInt(String.valueOf(stat.get("hr"))))
+                    .is_new(String.valueOf(stat.get("is_new")))
+                    .uv_ct(Long.valueOf(String.valueOf(stat.get("uv_ct"))))
+                    .pv_ct(Long.valueOf(String.valueOf(stat.get("pv_ct"))))
+                    .build();
+            visitorStats.add(build);
+        }
+
+        return visitorStats;
+    }
 }

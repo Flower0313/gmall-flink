@@ -16,5 +16,8 @@ import java.util.Map;
 @Service
 public interface VisitorStatService {
     //新老访客流量统计
-    public Map<String,VisitorStats> getVisitorStatsByNewsFlag(int date);
+    public Map<String, VisitorStats> getVisitorStatsByNewsFlag(int date);
+
+    //分时流量统计
+    public List<VisitorStats> getMidStatsGroupByHour(int date);
 }

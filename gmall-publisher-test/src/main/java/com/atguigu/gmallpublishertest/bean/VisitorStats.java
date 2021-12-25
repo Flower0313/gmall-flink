@@ -43,7 +43,7 @@ public class VisitorStats {
 
     //计算跳出率
     public Double getUjRate() {
-        if (uv_ct != 0L) {
+        if (uv_ct != 0L && sv_ct != 0) {
             //若uv不是0,那么sv肯定就不是0
             double d = (double) uj_ct * 100 / sv_ct;
             return Double.valueOf(new DecimalFormat(".00").format(d));
@@ -54,7 +54,7 @@ public class VisitorStats {
 
     //计算每次访问停留时间(秒)  = 当日总停留时间（毫秒)/当日访问次数/1000
     public Double getDurPerSv() {
-        if (uv_ct != 0L) {
+        if (uv_ct != 0L && sv_ct != 0) {
             long l = dur_sum / sv_ct / 1000;
             return (double) l;
         } else {
@@ -64,7 +64,7 @@ public class VisitorStats {
 
     //计算每次访问停留页面数 = 当日总访问页面数/当日访问次数
     public Double getPvPerSv() {
-        if (uv_ct != 0L) {
+        if (uv_ct != 0L && sv_ct != 0) {
             double d = (double) pv_ct / sv_ct;
             return Double.valueOf(new DecimalFormat(".00").format(d));
         } else {

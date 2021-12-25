@@ -63,9 +63,13 @@ public class BaseDBApp {
                 .build();
         DataStreamSource<String> tableProcessDS = env.addSource(sourceFunction);
 
-        //注册广播流,key为String类型,value为TableProcess类型,主流根据key来获取广播流数据
+        /*
+         * Explain
+         * 注册广播流,key为String类型,value为TableProcess类型,主流根据key来获取广播流数据,这是Map状态
+         * 这里的key也是必须要是主流中拥有的,不然主流如何通过key来取value数据呢
+         * */
         MapStateDescriptor<String, TableProcess> stateDescriptor = new MapStateDescriptor<>("tableProcessState", String.class, TableProcess.class);
-        //注入广播流
+        //注入广播流,注意broadcast也是重分区算子
         BroadcastStream<String> broadcastStream = tableProcessDS.broadcast(stateDescriptor);
 
         //Step-5 连接主流和广播流
