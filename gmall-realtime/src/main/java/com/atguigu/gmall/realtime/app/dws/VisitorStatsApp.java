@@ -49,12 +49,16 @@ public class VisitorStatsApp {
 
 
         //Step-2 从Kafka主题中接收消息
-        DataStreamSource<String> pageViewDStream = env
+        /*DataStreamSource<String> pageViewDStream = env
                 .addSource(MyKafkaUtil.getKafkaSource(PAGE_LOG_TOPIC, groupId));
         DataStreamSource<String> uniqueVisitDStream = env
                 .addSource(MyKafkaUtil.getKafkaSource(UNIQUE_VISIT_TOPIC, groupId));
         DataStreamSource<String> userJumpDStream = env
-                .addSource(MyKafkaUtil.getKafkaSource(USER_JUMP_TOPIC, groupId));
+                .addSource(MyKafkaUtil.getKafkaSource(USER_JUMP_TOPIC, groupId));*/
+
+        DataStreamSource<String> pageViewDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\pageLog.txt");
+        DataStreamSource<String> uniqueVisitDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\uniquevisit.txt");
+        DataStreamSource<String> userJumpDStream = env.readTextFile("T:\\ShangGuiGu\\gmall-flink\\gmall-realtime\\src\\main\\resources\\userjump.txt");
 
         /*
          * Step-3 将三条流转换为统一的VisitorStats格式再进行union
@@ -65,12 +69,18 @@ public class VisitorStatsApp {
                 json -> {
                     JSONObject jsonObj = JSON.parseObject(json);
                     JSONObject common = jsonObj.getJSONObject("common");
+
+                    String lastPageId = jsonObj.getJSONObject("page").getString("last_page_id");
+                    long sv = 0L;
+                    if (lastPageId == null) {
+                        sv = 1L;
+                    }
                     return new VisitorStats("", "",
                             common.getString("vc"),
                             common.getString("ch"),
                             common.getString("ar"),
                             common.getString("is_new"),
-                            0L, 1L, 0L, 0L,
+                            0L, sv, 0L, 0L,
                             jsonObj.getJSONObject("page").getLong("during_time"),
                             jsonObj.getLong("ts"));
                 }
@@ -123,14 +133,15 @@ public class VisitorStatsApp {
                 String lastPageId = jsonObj.getJSONObject("page").getString("last_page_id");
                 JSONObject common = jsonObj.getJSONObject("common");
                 //上一页为空就代表这是刚进入这个网页
-                if (lastPageId == null || lastPageId.length() == 0) {
-                    new VisitorStats("", "",
+                if (lastPageId == null || lastPageId.length() <= 0) {
+                    VisitorStats stats = new VisitorStats("", "",
                             common.getString("vc"),
                             common.getString("ch"),
                             common.getString("ar"),
                             common.getString("is_new"),
                             0L, 0L, 1L, 0L, 0L,
-                            common.getLong("ts"));
+                            jsonObj.getLong("ts"));
+                    out.collect(stats);
                 }
             }
         });

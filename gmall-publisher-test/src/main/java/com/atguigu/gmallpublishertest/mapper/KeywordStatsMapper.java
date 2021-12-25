@@ -16,8 +16,9 @@ import java.util.Map;
 
 
 public interface KeywordStatsMapper {
-    @Select("select word,count(*) ct from keyword_stats " +
+    @Select("select word," +
+            "count(*) ct from keyword_stats " +
             "where toYYYYMMDD(stt)=#{date} group by word " +
-            "order by ct limit #{limit}")
+            "order by ct desc limit #{limit}")
     public List<Map> selectKeyWordStats(@Param("date") int date, @Param("limit") int limit);
 }

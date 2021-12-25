@@ -4,6 +4,7 @@ import com.atguigu.gmallpublishertest.bean.VisitorStats;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName gmall-flink-VisitorStatService
@@ -15,5 +16,5 @@ import java.util.List;
 @Service
 public interface VisitorStatService {
     //新老访客流量统计
-    public List<VisitorStats> getVisitorStatsByNewsFlag(int date);
+    public Map<String,VisitorStats> getVisitorStatsByNewsFlag(int date);
 }

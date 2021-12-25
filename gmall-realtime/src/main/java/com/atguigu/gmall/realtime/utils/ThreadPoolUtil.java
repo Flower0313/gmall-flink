@@ -19,7 +19,7 @@ public class ThreadPoolUtil {
 
     }
 
-    //单例对象,线程安全
+    //线程安全的懒汉单例对象
     public static ThreadPoolExecutor getInstance() {
         /*
          * Explain:
@@ -31,7 +31,7 @@ public class ThreadPoolUtil {
          *  LinkedBlockingDeque:队列长度不受限制,当请求越来越多时(任务处理速度跟不上任务提交速度)可能导致内存占用过多或OOM
          * */
         if (pool == null) {
-            //Attention 静态方法的同步监视器就是类本身
+            //Attention 静态方法的同步监视器就是其类本身
             synchronized (ThreadPoolUtil.class) {
                 if (pool == null) {
                     pool = new ThreadPoolExecutor(

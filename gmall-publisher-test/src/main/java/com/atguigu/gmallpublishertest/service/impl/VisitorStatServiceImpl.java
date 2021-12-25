@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,18 +24,28 @@ public class VisitorStatServiceImpl implements VisitorStatService {
     VisitorStatsMapper visitorStatsMapper;
 
     @Override
-    public List<VisitorStats> getVisitorStatsByNewsFlag(int date) {
+    public Map<String, VisitorStats> getVisitorStatsByNewsFlag(int date) {
         List<Map> stats = visitorStatsMapper.selectVisitorStatsByNewFlag(date);
 
-        ArrayList<VisitorStats> visitorStats = new ArrayList<>();
+        HashMap<String, VisitorStats> statsHashMap = new HashMap<>();
 
         for (Map stat : stats) {
+            String is_new = String.valueOf(stat.get("is_new"));
+            String user = ("1").equals(is_new) ? "新用户" : "老用户";
             VisitorStats build = VisitorStats.builder()
-                    .is_new(String.valueOf(stat.get("is_new")))
+                    .is_new(user)
                     .uv_ct(Long.valueOf(String.valueOf(stat.get("uv_ct"))))
+                    .pv_ct(Long.valueOf(String.valueOf(stat.get("pv_ct"))))
+                    .sv_ct(Long.valueOf(String.valueOf(stat.get("sv_ct"))))
+                    .uj_ct(Long.valueOf(String.valueOf(stat.get("uj_ct"))))
+                    .dur_sum(Long.valueOf(String.valueOf(stat.get("dur_sum"))))
                     .build();
-            visitorStats.add(build);
+            if ("1".equals(is_new)) {
+                statsHashMap.put("new", build);
+            } else {
+                statsHashMap.put("old", build);
+            }
         }
-        return visitorStats;
+        return statsHashMap;
     }
 }

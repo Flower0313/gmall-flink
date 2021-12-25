@@ -14,13 +14,15 @@ import java.util.Map;
  */
 
 public interface VisitorStatsMapper {
-    @Select("select " +
-            "    is_new," +
-            "    sum(uv_ct) uv_ct," +
-            "    sum(pv_ct) pv_ct," +
-            "    sum(dur_sum) dur_sum " +
-            "from gmall.visitor_stats " +
-            "where toYYYYMMDD(stt)=#{date} " +
-            "group by is_new;")
+    @Select("select is_new,sum(uv_ct) uv_ct," +
+            "       sum(pv_ct) pv_ct," +
+            "       sum(sv_ct) sv_ct," +
+            "       sum(uj_ct) uj_ct," +
+            "       sum(dur_sum) dur_sum " +
+            "from visitor_stats where toYYYYMMDD(stt)=#{date} " +
+            "group by is_new")
     public List<Map> selectVisitorStatsByNewFlag(int date);
+
+    @Select("")
+    public List<Map> selectVisitorStatsByHour(int date);
 }
